@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Projeto Tunísia</title>
+    <link rel="stylesheet" href="./assets/css/style.css" />
+  </head>
+  <body>
+    <header class="header">
+  <div class="container nav-container">
+    <div class="logo">
+      <!-- Alterado de texto para imagem de forma semântica e moderna -->
+      <div class="logo-img">
+        <img src="./assets/img/logo.png" alt="Logo Projeto Tunísia" />
+      </div>
+      <div class="logo-text">
+        <h2>Projeto Tunísia</h2>
+        <span>Cultura, Inovação e Conhecimento</span>
+      </div>
+    </div>
+
+    <nav class="nav nav-menu">
+      <a href="#">Início</a>
+      <a href="#">Sobre o Projeto</a>
+      <a href="#">Mapa Interativo</a>
+      <a href="#">Semana Cultural</a>
+      <a href="#">Empreendedorismo</a>
+      <a href="#">Feira do Conhecimento</a>
+      <a href="#" class="btn-header-mobile">Conheça o Projeto</a>
+    </nav>
+
+    <a href="#" class="btn-header"> Conheça o Projeto </a>
+
+    <button class="hamburger" aria-label="Abrir Menu">
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </button>
+  </div>
+</header>
+
+    <section class="hero">
+  <!-- Vídeo adicionado como plano de fundo -->
+  <video autoplay loop muted playsinline class="hero-video">
+    <source src="./assets/img/videotunisia.mp4" type="video/mp4" />
+    Seu navegador não suporta vídeos.
+  </video>
+
+  <div class="overlay"></div>
+
+  <div class="container hero-content">
+    <div class="tag">
+      <span class="dot"></span>
+      Projeto Integrador 2026
+    </div>
+
+    <h1>
+      Tunísia: Cultura,<br />
+      Inovação e<br />
+      <span>Conhecimento</span>
+    </h1>
+
+    <p>
+      Uma jornada completa pelos aspectos culturais, econômicos, históricos
+      e tecnológicos de um dos países mais fascinantes do Mediterrâneo.
+    </p>
+
+    <div class="hero-buttons">
+      <a href="#" class="btn-primary"> Explorar Projeto → </a>
+      <a href="#" class="btn-secondary"> Saiba Mais </a>
+    </div>
+  </div>
+
+  <div class="scroll-indicator"></div>
+</section>
+
+    <section class="sobre-projeto">
+      <div class="titulo-section">
+        <span>SOBRE O PROJETO</span>
+        <h2>Projeto Integrador</h2>
+        <p>
+          Um trabalho multidisciplinar que conecta conhecimentos de diferentes
+          áreas do saber, desenvolvendo competências essenciais para a formação
+          acadêmica e pessoal dos alunos.
+        </p>
+      </div>
+
+      <div class="cards">
+        <div class="card">
+          <div class="icone">📖</div>
+          <h3>Pesquisa</h3>
+          <p>
+            Investigação profunda sobre aspectos culturais, históricos e sociais
+            da Tunísia.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="icone">💡</div>
+          <h3>Cultura</h3>
+          <p>
+            Exploração da rica herança cultural, gastronomia e tradições
+            tunisianas.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="icone">💻</div>
+          <h3>Tecnologia</h3>
+          <p>
+            Análise do desenvolvimento tecnológico e inovação no país
+            mediterrâneo.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="icone">📈</div>
+          <h3>Empreendedorismo</h3>
+          <p>
+            Desenvolvimento de ideias de negócios inspiradas na economia
+            tunisiana.
+          </p>
+        </div>
+      </div>
+
+      <div class="objetivos-box">
+        <div class="coluna">
+          <h3>Objetivos do Trabalho</h3>
+          <ul>
+            <li>Desenvolver pesquisa acadêmica sobre a Tunísia</li>
+            <li>Promover o conhecimento intercultural</li>
+            <li>Estimular o pensamento crítico e criativo</li>
+            <li>Integrar conhecimentos de diversas disciplinas</li>
+          </ul>
+        </div>
+
+        <div class="coluna">
+          <h3>Competências Desenvolvidas</h3>
+          <ul>
+            <li>Trabalho em equipe e colaboração</li>
+            <li>Comunicação oral e escrita</li>
+            <li>Organização e gestão de projetos</li>
+            <li>Criatividade e inovação</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="mapa-section">
+      <div class="container">
+        <div class="section-header">
+          <span>EXPLORE A TUNÍSIA</span>
+          <h2>Mapa Interativo</h2>
+          <p>
+            Descubra as principais cidades tunisianas, suas curiosidades e
+            atrações turísticas. Clique nos marcadores para explorar cada
+            região.
+          </p>
+        </div>
+
+        <div class="mapa-container">
+          <div class="mapa-box">
+            <img src="./assets/img/mapa.png" alt="Mapa da Tunísia" />
+
+            <button
+              class="marker"
+              style="top: 28%; left: 55%"
+              data-city="Túnis"
+              data-regiao="Capital"
+              data-atracao="Medina de Túnis e Ruínas de Cartago"
+              data-curiosidade="Mistura história milenar com modernidade cosmopolita."
+              aria-label="Ver Túnis"
+            ></button>
+            <button
+              class="marker"
+              style="top: 40%; left: 57%"
+              data-city="Sousse"
+              data-regiao="Sahel"
+              data-atracao="Medina de Sousse e Ribat"
+              data-curiosidade="Conhecida como a 'Pérola do Sahel' pelas praias lindas."
+              aria-label="Ver Sousse"
+            ></button>
+            <button
+              class="marker"
+              style="top: 44%; left: 59%"
+              data-city="Monastir"
+              aria-label="Ver Monastir"
+              data-regiao="Sahel"
+              data-atracao="Ribat de Monastir e Mausoléu"
+              data-curiosidade="Cidade litorânea com uma das fortalezas mais bem preservadas."
+            ></button>
+            <button
+              class="marker"
+              style="top: 52%; left: 55%"
+              data-city="Sfax"
+              aria-label="Ver Sfax"
+              data-regiao="Sfax"
+              data-atracao="Medina Muralhada e Mercados Tradicionais"
+              data-curiosidade="É o principal centro econômico e industrial do país."
+            ></button>
+            <button
+              class="marker"
+              style="top: 38%; left: 60%"
+              data-city="Hammamet"
+              aria-label="Ver Hammamet"
+              data-regiao="Nabeul"
+              data-atracao="Praias e Villa Sebastian"
+              data-curiosidade="O destino favorito para quem busca resorts e águas cristalinas."
+            ></button>
+          </div>
+
+          <div class="info-card" id="map-info-card">
+            <div class="info-header">
+              <div class="icon-box">🌍</div>
+              <div>
+                <h3 id="info-title">Informações Gerais</h3>
+                <span id="info-subtitle">República da Tunísia</span>
+              </div>
+            </div>
+
+            <div class="info-item">
+              <span id="label-1">👥 População / Região</span>
+              <strong id="val-1">12,3 milhões</strong>
+            </div>
+
+            <div class="info-item">
+              <span id="label-2">🗣️ Idioma / Atração</span>
+              <strong id="val-2">Árabe e Francês</strong>
+            </div>
+
+            <div class="info-item">
+              <span id="label-3">💲 Moeda / Curiosidade</span>
+              <strong id="val-3">Dinar Tunisiano (TND)</strong>
+            </div>
+
+            <div class="info-item">
+              <span>🌍 Continente</span>
+              <strong>África</strong>
+            </div>
+
+            <div class="info-item">
+              <span>📏 Área Total</span>
+              <strong>163.610 km²</strong>
+            </div>
+
+            <div class="country-code" id="info-code">TN</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="semana-cultural">
+      <div class="container">
+        <div class="section-header">
+          <span>SEMANA CULTURAL</span>
+          <h2>Celebrando a Tunísia</h2>
+          <p>
+            Uma semana dedicada a vivenciar e compartilhar a rica cultura
+            tunisiana através de experiências imersivas e apresentações
+            envolventes.
+          </p>
+        </div>
+
+        <div class="cultural-grid">
+          <div class="cultural-card">
+            <div class="cultural-image">
+              <img
+                src="./assets/img/img01.png"
+                alt="Gastronomia da Tunísia"
+              />
+              <div class="cultural-icon">🍴</div>
+            </div>
+            <div class="cultural-content">
+              <h3>Gastronomia</h3>
+              <p>Degustação de pratos típicos tunisianos</p>
+              <span>Cuscuz, tajine, brik e doces tradicionais</span>
+            </div>
+          </div>
+
+          <div class="cultural-card">
+            <div class="cultural-image">
+              <img
+                src="./assets/img/img02.png"
+                alt="Música tradicional tunisiana"
+              />
+              <div class="cultural-icon">🎵</div>
+            </div>
+            <div class="cultural-content">
+              <h3>Música</h3>
+              <p>Apresentação de músicas e danças tradicionais</p>
+              <span>Ritmos mediterrâneos e instrumentos árabes</span>
+            </div>
+          </div>
+
+          <div class="cultural-card">
+            <div class="cultural-image">
+              <img src="./assets/img/img03.png" alt="História da Tunísia" />
+              <div class="cultural-icon">📖</div>
+            </div>
+            <div class="cultural-content">
+              <h3>História</h3>
+              <p>Exposição sobre a rica história tunisiana</p>
+              <span>De Cartago aos dias atuais</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="empreendedorismo">
+      <div class="container">
+        <div class="section-header">
+          <span>FEIRA DO EMPREENDEDORISMO</span>
+          <h2>
+            Empreendedorismo com
+            <span class="highlight">Sabor Tunisiano</span>
+          </h2>
+          <p>
+            Transformando tradição em oportunidade através do Bambalouni, um
+            doce típico tunisiano que combina cultura, gastronomia e potencial
+            de mercado.
+          </p>
+        </div>
+
+        <div class="business-grid">
+          <div class="business-card">
+            <div class="business-image">
+              <img
+                src="./assets/img/bambalouni.png"
+                alt="Bambalouni doce tradicional"
+              />
+            </div>
+            <div class="business-content">
+              <h3>Bambalouni</h3>
+              <p>
+                Doce tradicional tunisiano preparado com masa fermentada, frita
+                até atingir textura crocante por fora e macia por dentro,
+                finalizada com açúcar cristal.
+              </p>
+              <div class="stats">
+                <div class="stat">
+                  <strong>100%</strong>
+                  <span>Tradicional</span>
+                </div>
+                <div class="stat">
+                  <strong>5+</strong>
+                  <span>Variações</span>
+                </div>
+                <div class="stat">
+                  <strong>★ 4.9</strong>
+                  <span>Aprovação</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="features">
+            <div class="feature">
+              <div class="feature-icon">🍩</div>
+              <div>
+                <h4>Receita Tradicional</h4>
+                <p>Preparada seguindo técnicas centenárias tunisianas.</p>
+              </div>
+            </div>
+
+            <div class="feature">
+              <div class="feature-icon">⭐</div>
+              <div>
+                <h4>Sabor Autêntico</h4>
+                <p>Experiência gastronômica única e memorável.</p>
+              </div>
+            </div>
+
+            <div class="feature">
+              <div class="feature-icon">📍</div>
+              <div>
+                <h4>Origem Cultural</h4>
+                <p>Inspirado nas ruas históricas de Sidi Bou Said.</p>
+              </div>
+            </div>
+
+            <div class="feature">
+              <div class="feature-icon">📈</div>
+              <div>
+                <h4>Potencial de Mercado</h4>
+                <p>Produto diferenciado para eventos e cafeterias.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="business-models">
+          <div class="model-card">
+            <h3>Produto</h3>
+            <ul>
+              <li>Bambalouni tradicional</li>
+              <li>Versões gourmet</li>
+              <li>Kits para preparo</li>
+            </ul>
+          </div>
+
+          <div class="model-card">
+            <h3>Público-Alvo</h3>
+            <ul>
+              <li>Turistas</li>
+              <li>Amantes da gastronomia</li>
+              <li>Eventos culturais</li>
+            </ul>
+          </div>
+
+          <div class="model-card">
+            <h3>Diferenciais</h3>
+            <ul>
+              <li>Receita original tunisiana</li>
+              <li>Ingredientes selecionados</li>
+              <li>Experiência cultural</li>
+            </ul>
+          </div>
+
+          <div class="model-card">
+            <h3>Estratégia</h3>
+            <ul>
+              <li>Parcerias com cafeterias</li>
+              <li>Feiras gastronômicas</li>
+              <li>Marketing digital</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="feira-conhecimento">
+      <div class="container">
+        <div class="section-header">
+          <span>FEIRA DO CONHECIMENTO</span>
+          <h2>
+            Descobertas e
+            <span class="highlight">Pesquisas</span>
+          </h2>
+          <p>
+            Resultados das pesquisas desenvolvidas sobre a Tunísia, reunindo
+            dados geográficos, econômicos, tecnológicos, educacionais e
+            ambientais.
+          </p>
+        </div>
+
+        <div class="knowledge-grid">
+          <div class="knowledge-card">
+            <div class="knowledge-icon">🌍</div>
+            <h3>Geografia</h3>
+            <ul>
+              <li>Localização estratégica no Mediterrâneo</li>
+              <li>Deserto do Saara e regiões costeiras</li>
+              <li>Clima mediterrâneo predominante</li>
+            </ul>
+          </div>
+
+          <div class="knowledge-card">
+            <div class="knowledge-icon">💰</div>
+            <h3>Economia</h3>
+            <ul>
+              <li>Turismo como setor estratégico</li>
+              <li>Produção de azeite e tâmaras</li>
+              <li>Indústria têxtil e tecnológica</li>
+            </ul>
+          </div>
+
+          <div class="knowledge-card">
+            <div class="knowledge-icon">🎓</div>
+            <h3>Educação</h3>
+            <ul>
+              <li>Sistema público e gratuito</li>
+              <li>Alto índice de alfabetização</li>
+              <li>Universidades reconhecidas</li>
+            </ul>
+          </div>
+
+          <div class="knowledge-card">
+            <div class="knowledge-icon">💻</div>
+            <h3>Tecnologia</h3>
+            <ul>
+              <li>Hub tecnológico do Norte da África</li>
+              <li>Crescimento de startups</li>
+              <li>Infraestrutura digital moderna</li>
+            </ul>
+          </div>
+
+          <div class="knowledge-card">
+            <div class="knowledge-icon">🏛️</div>
+            <h3>Turismo</h3>
+            <ul>
+              <li>Patrimônios da UNESCO</li>
+              <li>Praias do Mediterrâneo</li>
+              <li>Sítios arqueológicos de Cartago</li>
+            </ul>
+          </div>
+
+          <div class="knowledge-card">
+            <div class="knowledge-icon">🌱</div>
+            <h3>Sustentabilidade</h3>
+            <ul>
+              <li>Expansão da energia solar</li>
+              <li>Conservação ambiental</li>
+              <li>Agricultura sustentável</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="knowledge-stats">
+          <div class="stat-box">
+            <h3>6</h3>
+            <span>Áreas Pesquisadas</span>
+          </div>
+          <div class="stat-box">
+            <h3>20+</h3>
+            <span>Fontes Consultadas</span>
+          </div>
+          <div class="stat-box">
+            <h3>100%</h3>
+            <span>Conteúdo Autoral</span>
+          </div>
+          <div class="stat-box">
+            <h3>2026</h3>
+            <span>Projeto Integrador</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="cronograma">
+      <div class="container">
+        <div class="section-header">
+          <span>DESENVOLVIMENTO DO PI</span>
+          <h2>Cronograma do Projeto</h2>
+          <p>
+            Acompanhe as principais etapas do desenvolvimento do Projeto
+            Integrador, desde a escolha do país até a apresentação final.
+          </p>
+        </div>
+
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-card">
+              <div class="timeline-date">Março 2026</div>
+              <h3>Escolha do País</h3>
+              <p>Definição da Tunísia como tema principal do projeto.</p>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-card">
+              <div class="timeline-date">Março - Abril</div>
+              <h3>Pesquisa Inicial</h3>
+              <p>Levantamento de dados históricos, culturais e econômicos.</p>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-card">
+              <div class="timeline-date">Abril - Maio</div>
+              <h3>Coleta de Informações</h3>
+              <p>Pesquisa aprofundada em diversas áreas do conhecimento.</p>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-card">
+              <div class="timeline-date">Maio - Junho</div>
+              <h3>Produção dos Materiais</h3>
+              <p>
+                Criação de banners, apresentações, maquetes e conteúdos
+                digitais.
+              </p>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-card">
+              <div class="timeline-date">Junho 2026</div>
+              <h3>Preparação das Apresentações</h3>
+              <p>Organização dos eventos e ensaios finais.</p>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-card">
+              <div class="timeline-date">Junho 2026</div>
+              <h3>Evento Final</h3>
+              <p>
+                Semana Cultural, Feira do Conhecimento e Feira de
+                Empreendedorismo.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-grid">
+          <div class="footer-column">
+            <div class="footer-logo">
+              <img
+                src="./assets/img/logo.png"
+                alt="Bandeira ou brasão da Tunísia"
+              />
+              <div>
+                <h3>Projeto Tunísia</h3>
+                <span>Projeto Integrador 2026</span>
+              </div>
+            </div>
+            <p>
+              Projeto Integrador dedicado ao estudo da cultura, história,
+              economia, turismo e inovação da Tunísia.
+            </p>
+            <div class="social-links">
+              <a href="#" aria-label="Instagram">📷</a>
+              <a href="#" aria-label="Facebook">📘</a>
+              <a href="#" aria-label="YouTube">▶️</a>
+              <a href="#" aria-label="LinkedIn">💼</a>
+            </div>
+          </div>
+
+          <div class="footer-column">
+            <h4>Navegação</h4>
+            <ul>
+              <li><a href="#">Início</a></li>
+              <li><a href="#">Sobre o Projeto</a></li>
+              <li><a href="#">Mapa Interativo</a></li>
+              <li><a href="#">Semana Cultural</a></li>
+              <li><a href="#">Empreendedorismo</a></li>
+              <li><a href="#">Feira do Conhecimento</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-column">
+            <h4>Informações</h4>
+            <ul>
+              <li><strong>Escola:</strong> Senac</li>
+              <li><strong>Curso:</strong> Técnico em TI</li>
+              <li><strong>Turma:</strong> 2º Ano</li>
+              <li><strong>Ano:</strong> 2026</li>
+            </ul>
+          </div>
+
+          <div class="footer-column">
+            <h4>Contato</h4>
+            <ul>
+              <li>📧 projeto@tunisia.com</li>
+              <li>📍 Brasil</li>
+              <li>🌎 Projeto Acadêmico</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          <p>© 2026 Projeto Tunísia • Desenvolvido para o Projeto Integrador</p>
+        </div>
+      </div>
+    </footer>
+
+    <script src="./assets/js/index.js"></script>
+  </body>
+</html>
