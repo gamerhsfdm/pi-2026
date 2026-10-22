@@ -1366,3 +1366,23 @@ section {
         gap: 10px;
     }
 }
+
+/* <picture> (WebP) é transparente para o layout */
+picture {
+  display: contents;
+}
+
+/* Palavra destacada dentro do título (ex.: "Descobertas e <span class="highlight">Pesquisas</span>"):
+   mantém o tamanho do título em vez de herdar o estilo pequeno do selo (.titulo-section span). */
+.titulo-section h2 .highlight, .section-header h2 .highlight {
+    font-size: inherit;
+    font-weight: inherit;
+    letter-spacing: inherit;
+    text-transform: none;
+}
+
+/* "Sobre o Projeto": a seção não usa .container, então título e cards encostavam nas bordas da tela. */
+.sobre-projeto {
+    padding-left: max(20px, 4vw);
+    padding-right: max(20px, 4vw);
+}

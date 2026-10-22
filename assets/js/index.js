@@ -111,7 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                         // Injeta os dados dinamicamente respeitando o layout do seu HTML
                         if (infoTitle) infoTitle.textContent = cidade;
-                        if (infoSubtitle) infoSubtitle.textContent = "Região do Sahel / Capital";
+                        if (infoSubtitle) infoSubtitle.textContent = regiao;
                         if (val1) val1.textContent = regiao;
                         if (val2) val2.textContent = atracao;
                         if (val3) val3.textContent = curiosidade;
@@ -210,3 +210,61 @@ document.addEventListener("DOMContentLoaded", () => {
         console.warn("Aviso no bloco de interações: ", error);
     }
 });
+
+// ==========================================================================
+// 3. VÍDEO DO HERO: respeita economia de dados / movimento reduzido e pausa fora da tela
+// ==========================================================================
+(function () {
+    const video = document.querySelector("[data-hero-video]");
+    if (!video) return;
+
+    const conn = navigator.connection || {};
+    const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const slowNetwork = conn.saveData === true || /(^|-)2g$/.test(conn.effectiveType || "");
+
+    if (reduceMotion || slowNetwork) {
+        // Mantém apenas o poster (WebP leve) e cancela o download do vídeo.
+        video.removeAttribute("autoplay");
+        video.pause();
+        const source = video.querySelector("source");
+        if (source) {
+            source.removeAttribute("src");
+            video.load();
+        }
+        return;
+    }
+
+    if ("IntersectionObserver" in window) {
+        new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    const playing = video.play();
+                    if (playing && playing.catch) playing.catch(() => {});
+                } else {
+                    video.pause();
+                }
+            });
+        }, { threshold: 0.1 }).observe(video);
+    }
+})();
+
+// ==========================================================================
+// 4. ANIMAÇÃO DAS SEÇÕES (configurada no painel): revela ao entrar na tela
+// ==========================================================================
+(function () {
+    const targets = document.querySelectorAll(".sx-anim");
+    if (!targets.length) return;
+    if (!("IntersectionObserver" in window)) {
+        targets.forEach((el) => el.classList.add("sx-in"));
+        return;
+    }
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add("sx-in");
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.12 });
+    targets.forEach((el) => observer.observe(el));
+})();
