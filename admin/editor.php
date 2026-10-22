@@ -365,7 +365,10 @@ require_once __DIR__ . '/../includes/admin_header.php';
 
 <style>
 .si-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.editor-guide{padding:14px 16px;border:1px solid #e0e7ff;border-radius:16px;background:linear-gradient(135deg,#f8faff,#f5f3ff);display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}.editor-guide-copy{display:flex;gap:10px;align-items:flex-start}.editor-guide-icon{width:30px;height:30px;border-radius:10px;background:#4f46e5;color:#fff;display:grid;place-items:center;font-size:14px;flex:none}.editor-guide b{display:block;font-size:12px;color:#312e81}.editor-guide p{margin:2px 0 0;font-size:11px;line-height:1.45;color:#64748b}.editor-steps{display:flex;align-items:center;gap:5px;flex-wrap:wrap}.editor-step{display:inline-flex;align-items:center;gap:5px;padding:5px 8px;border-radius:999px;background:#fff;border:1px solid #e0e7ff;color:#475569;font-size:10.5px;font-weight:700;text-decoration:none}.editor-step i{font-style:normal;display:grid;place-items:center;width:15px;height:15px;border-radius:50%;background:#e0e7ff;color:#4338ca;font-size:9px}.editor-step:hover{border-color:#a5b4fc;color:#4338ca}
 .si-head-actions{display:flex;gap:8px;flex-shrink:0}
+.si-head-copy{max-width:560px}.si-head-copy p{line-height:1.5}
+.si-status{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin-top:10px}.si-status-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:999px;background:#f1f5f9;color:#64748b;font-size:10.5px;font-weight:700}.si-status-pill strong{color:#334155}.si-status-dot{width:6px;height:6px;border-radius:50%;background:#6366f1}.si-status-dot.ready{background:#10b981}.si-status-dot.warn{background:#f59e0b}
 .si-btn-primary,.si-btn-ghost{font-size:12px;font-weight:600;padding:8px 14px;border-radius:10px;border:1px solid transparent;cursor:pointer;transition:background .15s,border-color .15s}
 .si-btn-primary{background:#4f46e5;color:#fff}
 .si-btn-primary:hover{background:#4338ca}
@@ -412,6 +415,9 @@ require_once __DIR__ . '/../includes/admin_header.php';
 
 .si-body{padding:4px 16px 16px;border-top:1px solid #f1f5f9;margin:0 0 0;display:none}
 .is-open .si-body{display:block}
+.si-editor-note{display:flex;align-items:center;gap:7px;margin-top:13px;padding:8px 10px;border-radius:9px;background:#f8fafc;color:#64748b;font-size:11px}.si-editor-note b{color:#475569}
+.si-field-tools{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:3px}.si-counter{font-size:10.5px;color:#94a3b8;font-variant-numeric:tabular-nums}.si-counter.is-long{color:#b45309}.si-required{color:#e11d48;font-size:11px}
+.si-complete{font-size:10px;font-weight:700;color:#b45309;background:#fffbeb;border:1px solid #fde68a;padding:3px 7px;border-radius:999px;white-space:nowrap}.si-complete.ready{color:#047857;background:#ecfdf5;border-color:#a7f3d0}
 .si-row-head,.si-summary,.si-body,.si-grid,.si-field{box-sizing:border-box}
 .si-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
 .si-field{display:flex;flex-direction:column;gap:5px;min-width:0}
@@ -439,6 +445,7 @@ require_once __DIR__ . '/../includes/admin_header.php';
   .is-open .si-tools{display:flex}
   .si-head-actions{width:100%}
   .si-head-actions button{flex:1}
+  .editor-guide{align-items:flex-start}.editor-steps{width:100%}
 }
 </style>
 
@@ -458,9 +465,14 @@ require_once __DIR__ . '/../includes/admin_header.php';
         </div>
         <?php endif; ?>
 
-        <div>
-            <h2 class="text-base font-bold text-slate-900">Conteúdo Principal</h2>
-            <p class="text-xs text-slate-400 mt-0.5">Textos e mídias exibidos na seção.</p>
+        <div class="editor-guide" aria-label="Como editar esta seção">
+            <div class="editor-guide-copy"><span class="editor-guide-icon">✦</span><div><b>Edite em quatro etapas simples</b><p>As alterações aparecem no preview ao lado e só chegam ao site quando você publicar.</p></div></div>
+            <nav class="editor-steps" aria-label="Ir para uma etapa"><a class="editor-step" href="#mainContentFields"><i>1</i>Conteúdo</a><a class="editor-step" href="#sectionItemsEditor"><i>2</i>Itens</a><a class="editor-step" href="#sxPanel"><i>3</i>Aparência</a><a class="editor-step" href="#editorActions"><i>4</i>Salvar</a></nav>
+        </div>
+
+        <div id="mainContentFields">
+            <h2 class="text-base font-bold text-slate-900">1. Conteúdo principal</h2>
+            <p class="text-xs text-slate-400 mt-0.5">Defina o título, textos, chamadas e a visibilidade da seção.</p>
         </div>
 
         <?php if ($isNewSection): ?>
@@ -542,9 +554,10 @@ require_once __DIR__ . '/../includes/admin_header.php';
 
         <div class="pt-6 border-t border-slate-100" id="sectionItemsEditor">
             <div class="si-head">
-                <div>
-                    <h2 class="text-base font-bold text-slate-900">Conteúdo interno da seção</h2>
-                    <p class="text-xs text-slate-500 mt-1">Cards, etapas, listas e destaques exibidos dentro desta seção. Clique em um item para editar.</p>
+                <div class="si-head-copy">
+                    <h2 class="text-base font-bold text-slate-900">2. Conteúdo interno da seção</h2>
+                    <p class="text-xs text-slate-500 mt-1">Cards, etapas, listas e destaques exibidos dentro desta seção. Clique em um item para editar e use os controles à direita para organizar a sequência.</p>
+                    <div class="si-status" id="siStatus" aria-live="polite"></div>
                 </div>
                 <div class="si-head-actions">
                     <button type="button" id="siToggleAll" class="si-btn-ghost">Expandir todos</button>
@@ -720,7 +733,7 @@ require_once __DIR__ . '/../includes/admin_header.php';
         </style>
 
         <details class="sxp" id="sxPanel" <?= !sectionStyleIsEmpty($styleValues) ? 'open' : '' ?>>
-            <summary><span style="font-size:1.2rem">🎨</span><b>Aparência e layout</b><small>posição, fontes, cores, fundo, cards e efeitos — com preview ao vivo</small></summary>
+            <summary><span style="font-size:1.2rem">🎨</span><b>3. Aparência e layout</b><small>posição, fontes, cores, fundo, cards e efeitos — com preview ao vivo</small></summary>
             <div class="sxp-body">
                 <div>
                     <p class="sxp-label" style="margin:0 0 .45rem">Estilos prontos <span style="font-weight:500;color:#94a3b8">(ponto de partida — ajuste depois)</span></p>
@@ -765,7 +778,6 @@ require_once __DIR__ . '/../includes/admin_header.php';
                                 <?php endforeach; ?>
                             </div>
                         </div>
-                        <label class="sxp-field sxp-wide"><span class="sxp-label">Ou enviar nova imagem</span><input type="file" name="image_file" accept="image/jpeg,image/png,image/webp,image/gif"></label>
                         <div class="sxp-wide"><?php $sxChips('media_width', 'Largura da imagem'); ?></div>
                         <div class="sxp-wide"><?php $sxChips('media_ratio', 'Proporção da imagem'); ?></div>
                         <div class="sxp-wide"><?php $sxChips('media_fit', 'Ajuste da imagem'); ?></div>
@@ -912,12 +924,12 @@ require_once __DIR__ . '/../includes/admin_header.php';
         </div>
         <?php endif; ?>
 
-        <div class="pt-6 border-t border-slate-100 flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-            <button type="submit" name="action" value="save_draft" class="px-5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition">
-                Salvar rascunho
+        <div id="editorActions" class="pt-6 border-t border-slate-100 flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+                <button type="submit" name="action" value="save_draft" class="px-5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition">
+                4. Salvar rascunho
             </button>
             <button type="submit" name="action" value="publish" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-md shadow-indigo-100 transition">
-                Publicar alterações
+                4. Publicar alterações
             </button>
         </div>
     </div>
@@ -1402,6 +1414,7 @@ require_once __DIR__ . '/../includes/admin_header.php';
         const list = document.getElementById('sectionItemsList');
         const filtersEl = document.getElementById('siFilters');
         const emptyEl = document.getElementById('siEmpty');
+        const statusEl = document.getElementById('siStatus');
         const toggleAllBtn = document.getElementById('siToggleAll');
         const SITE_URL = <?= json_encode(SITE_URL) ?>;
         let activeFilter = 'all';
@@ -1466,9 +1479,10 @@ require_once __DIR__ . '/../includes/admin_header.php';
             const text = el('span', { class: 'si-text' });
             const tTitle = el('span', { class: 'si-title' });
             const tSub = el('span', { class: 'si-sub' });
+            const complete = el('span', { class: 'si-complete' });
             text.append(tTitle, tSub);
             const typeChip = el('span', { class: 'si-type' });
-            summary.append(thumb, text, typeChip, el('span', null, ICONS.chevron));
+            summary.append(thumb, text, complete, typeChip, el('span', null, ICONS.chevron));
             const tools = el('div', { class: 'si-tools' });
             const mk = (cls, label, icon) => { const b = el('button', { type: 'button', class: 'si-icon-btn ' + cls, title: label, 'aria-label': label }, icon); return b; };
             const bUp = mk('up', 'Mover para cima', ICONS.up);
@@ -1498,6 +1512,12 @@ require_once __DIR__ . '/../includes/admin_header.php';
                 c.value = d[f] || '';
                 inputs[f] = c;
                 const w = field(f, FIELDS[f][0], c, f === 'description' ? 'full' : '', '');
+                if (f === 'description') {
+                    const tools = el('div', { class: 'si-field-tools' });
+                    const help = el('span'); help.textContent = 'Escreva uma descrição clara para o visitante.';
+                    const counter = el('span', { class: 'si-counter', 'data-counter': 'description' });
+                    tools.append(help, counter); w.appendChild(tools);
+                }
                 wrappers[f] = w;
                 return w;
             };
@@ -1536,6 +1556,7 @@ require_once __DIR__ . '/../includes/admin_header.php';
                 moreDetails.hidden = otherHost.length === 0;
                 moreDetails.open = otherHost.some(w => (w.querySelector('input,textarea').value || '').trim() !== '');
                 refreshSummary();
+                updateStatus();
             }
 
             function refreshSummary() {
@@ -1557,10 +1578,20 @@ require_once __DIR__ . '/../includes/admin_header.php';
                 } else {
                     thumb.textContent = icon || (type === 'timeline' ? '📅' : type === 'stat' ? '#' : type === 'map_marker' ? '📍' : '•');
                 }
+                const description = (inputs.description.value || '').trim();
+                const words = description ? description.split(/\s+/).length : 0;
+                const counter = row.querySelector('[data-counter="description"]');
+                if (counter) {
+                    counter.textContent = description.length + ' caracteres · ' + words + ' palavras';
+                    counter.classList.toggle('is-long', description.length > 600);
+                }
+                const ready = title !== '' && (description !== '' || type === 'stat' || type === 'map_marker');
+                complete.textContent = ready ? 'Pronto' : 'Completar';
+                complete.classList.toggle('ready', ready);
             }
 
             select.addEventListener('change', applyType);
-            Object.keys(inputs).forEach(k => { if (k !== 'type') inputs[k].addEventListener('input', refreshSummary); });
+            Object.keys(inputs).forEach(k => { if (k !== 'type') inputs[k].addEventListener('input', () => { refreshSummary(); updateStatus(); }); });
 
             function setOpen(open) {
                 row.classList.toggle('is-open', open);
@@ -1632,6 +1663,22 @@ require_once __DIR__ . '/../includes/admin_header.php';
             }
         }
 
+        function updateStatus() {
+            if (!statusEl) return;
+            const allRows = rows();
+            const ready = allRows.filter(r => r.querySelector('.si-complete.ready')).length;
+            const types = new Set(allRows.map(r => r.dataset.type)).size;
+            statusEl.replaceChildren();
+            const pill = (label, value, state) => {
+                const p = el('span', { class: 'si-status-pill' });
+                p.append(el('i', { class: 'si-status-dot ' + state }), document.createTextNode(label + ' '), Object.assign(el('strong'), { textContent: value }));
+                statusEl.appendChild(p);
+            };
+            pill('Itens:', String(allRows.length), allRows.length ? 'ready' : '');
+            pill('Prontos:', ready + '/' + allRows.length, ready === allRows.length && allRows.length ? 'ready' : 'warn');
+            pill('Tipos:', String(types), '');
+        }
+
         function refresh() {
             rows().forEach(r => { r.hidden = !(activeFilter === 'all' || r.dataset.type === activeFilter); });
             renderFilters();
@@ -1643,6 +1690,7 @@ require_once __DIR__ . '/../includes/admin_header.php';
                 if (down) down.disabled = idx === -1 || idx === vis.length - 1;
             });
             if (emptyEl) emptyEl.hidden = rows().length > 0;
+            updateStatus();
             updateToggleAll();
         }
 

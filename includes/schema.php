@@ -9,7 +9,7 @@ function ensureSchema(PDO $pdo): void {
     static $done = false;
     if ($done) return;
 
-    $flag = CACHE_DIR . '/schema-v3-' . md5(DB_HOST . '|' . DB_PORT . '|' . DB_NAME) . '.ok';
+    $flag = CACHE_DIR . '/schema-v4-' . md5(DB_HOST . '|' . DB_PORT . '|' . DB_NAME) . '.ok';
     if (is_file($flag)) { $done = true; return; }
 
     try {
@@ -34,6 +34,24 @@ function ensureSchema(PDO $pdo): void {
             $pdo->exec("ALTER TABLE `sections` ADD COLUMN `style_data` LONGTEXT NULL AFTER `publish_at`");
         }
 
+        // Campos usados pelo conteúdo, pelo lock de edição e pelo filtro do site público.
+        $sectionColumns = [
+            'deleted_at' => 'ADD COLUMN `deleted_at` DATETIME NULL DEFAULT NULL AFTER `style_data`',
+            'locked_by'  => 'ADD COLUMN `locked_by` INT UNSIGNED NULL DEFAULT NULL AFTER `deleted_at`',
+            'locked_at'  => 'ADD COLUMN `locked_at` DATETIME NULL DEFAULT NULL AFTER `locked_by`',
+        ];
+        foreach ($sectionColumns as $name => $sql) {
+            if (!$pdo->query("SHOW COLUMNS FROM `sections` LIKE " . $pdo->quote($name))->fetch()) {
+                $pdo->exec("ALTER TABLE `sections` {$sql}");
+            }
+        }
+        if (!$pdo->query("SHOW INDEX FROM `sections` WHERE Key_name = 'idx_sections_deleted_at'")->fetch()) {
+            $pdo->exec('ALTER TABLE `sections` ADD INDEX `idx_sections_deleted_at` (`deleted_at`)');
+        }
+        if (!$pdo->query("SHOW INDEX FROM `sections` WHERE Key_name = 'idx_sections_publish_at'")->fetch()) {
+            $pdo->exec('ALTER TABLE `sections` ADD INDEX `idx_sections_publish_at` (`publish_at`)');
+        }
+
         $pdo->exec("CREATE TABLE IF NOT EXISTS `password_resets` (
             `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             `user_id` INT UNSIGNED NOT NULL,
@@ -46,6 +64,18 @@ function ensureSchema(PDO $pdo): void {
             INDEX `idx_reset_user` (`user_id`, `created_at`),
             INDEX `idx_reset_ip` (`ip_address`, `created_at`),
             CONSTRAINT `fk_reset_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+        $pdo->exec("CREATE TABLE IF NOT EXISTS `support_messages` (
+            `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            `ticket_id` INT UNSIGNED NOT NULL,
+            `user_id` INT UNSIGNED NULL,
+            `message` TEXT NOT NULL,
+            `attachment` VARCHAR(255) NULL,
+            `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            INDEX `idx_support_messages_ticket` (`ticket_id`, `created_at`),
+            CONSTRAINT `fk_support_message_ticket` FOREIGN KEY (`ticket_id`) REFERENCES `support_tickets` (`id`) ON DELETE CASCADE,
+            CONSTRAINT `fk_support_message_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
         $done = true;

@@ -4,8 +4,8 @@
 -- Compatível com phpMyAdmin, MySQL 5.7+ / MariaDB 10.3+
 -- =======================================================
 
-CREATE DATABASE IF NOT EXISTS `projeto_tunisia` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE `projeto_tunisia`;
+-- Execute este arquivo APÓS selecionar, no phpMyAdmin, o mesmo banco definido em DB_NAME no .env.
+-- Não use CREATE DATABASE/USE aqui: isso poderia importar a estrutura no banco errado.
 
 -- --------------------------------------------------------
 -- Tabela: users (Usuários e Controle de Acesso)
@@ -22,16 +22,8 @@ CREATE TABLE IF NOT EXISTS `users` (
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- --------------------------------------------------------
--- Administrador inicial (USO LOCAL / DESENVOLVIMENTO)
---   E-mail: adm@adm.com   Senha: Adm@123
--- ATENÇÃO: senha fraca e conhecida. Antes de publicar na internet, crie um administrador
--- próprio (php admin/create_admin.php) e apague esta conta:
---   DELETE FROM users WHERE email = 'adm@adm.com';
--- --------------------------------------------------------
-INSERT INTO `users` (`name`, `email`, `password`, `role`, `status`)
-VALUES ('Administrador', 'adm@adm.com', '$2y$10$yQHLXoisBJ7xgb/n3fK7TOGZf9fIxzZQHMUzVPXNBVQHW1Ca.Xxve', 'admin', 'active')
-ON DUPLICATE KEY UPDATE `password` = VALUES(`password`), `role` = 'admin', `status` = 'active';
+-- Não crie usuários pelo arquivo de estrutura. Use admin/create_admin.php para criar
+-- o primeiro administrador sem sobrescrever uma conta existente.
 
 -- --------------------------------------------------------
 -- Tabela: site_settings (Configurações Gerais e de Publicação)
@@ -84,7 +76,13 @@ CREATE TABLE IF NOT EXISTS `sections` (
   `draft_data` LONGTEXT NULL,
   `publish_at` DATETIME NULL DEFAULT NULL,
   `style_data` LONGTEXT NULL,
+  `deleted_at` DATETIME NULL DEFAULT NULL,
+  `locked_by` INT UNSIGNED NULL DEFAULT NULL,
+  `locked_at` DATETIME NULL DEFAULT NULL,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  ,INDEX `idx_sections_deleted_at` (`deleted_at`)
+  ,INDEX `idx_sections_publish_at` (`publish_at`)
+  ,CONSTRAINT `fk_sections_locked_by` FOREIGN KEY (`locked_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -216,7 +214,24 @@ CREATE TABLE IF NOT EXISTS `support_tickets` (
   CONSTRAINT `fk_ticket_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Usuários não são semeados com senhas conhecidas. Crie o administrador via CLI.
+-- Mensagens trocadas em cada chamado (consultada por admin/support.php).
+CREATE TABLE IF NOT EXISTS `support_messages` (
+  `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `ticket_id` INT UNSIGNED NOT NULL,
+  `user_id` INT UNSIGNED NULL,
+  `message` TEXT NOT NULL,
+  `attachment` VARCHAR(255) NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX `idx_support_messages_ticket` (`ticket_id`, `created_at`),
+  CONSTRAINT `fk_support_message_ticket` FOREIGN KEY (`ticket_id`) REFERENCES `support_tickets` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_support_message_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+/*
+  Dados de exemplo para instalações novas foram desabilitados intencionalmente.
+  Este arquivo é seguro para importar em um banco já existente: não altera títulos,
+  imagens, usuários, configurações ou itens. Crie o primeiro administrador por
+  admin/create_admin.php e cadastre conteúdo pelo painel.
 
 -- --------------------------------------------------------
 -- Inserções Iniciais: Configurações Gerais
@@ -289,4 +304,5 @@ INSERT INTO `media` (`id`, `filename`, `original_name`, `filepath`, `file_type`,
 ON DUPLICATE KEY UPDATE `filename`=VALUES(`filename`);
 
 -- Histórico e auditoria começam vazios; serão preenchidos por ações reais no painel.
+*/
 
