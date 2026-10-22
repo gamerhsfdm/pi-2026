@@ -1,0 +1,54 @@
+# =====================================================================
+# Projeto Tunísia — configuração Apache (XAMPP / hospedagem padrão)
+# =====================================================================
+Options -Indexes
+DirectoryIndex index.php index.html
+
+# --- Arquivos e pastas que nunca devem ser baixados pela web ----------
+<FilesMatch "(^\.|\.(sql|md|json|lock|sh|log|bak|dist|example|tmp|yml|yaml)$|^(tailwind|postcss)\.config\.js$)">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+<IfModule mod_alias.c>
+    RedirectMatch 403 (^|/)(config|includes|docs|scripts|cache|backups|node_modules|\.git)(/|$)
+</IfModule>
+
+# --- URLs amigáveis para SEO -------------------------------------------
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^sitemap\.xml$ sitemap.php [L]
+    RewriteRule ^robots\.txt$ robots.php [L]
+</IfModule>
+
+# --- Cabeçalhos de segurança para arquivos estáticos -------------------
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+</IfModule>
+
+# --- Compressão ---------------------------------------------------------
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/css text/xml
+    AddOutputFilterByType DEFLATE application/javascript text/javascript application/json application/xml image/svg+xml
+</IfModule>
+
+# --- Cache de arquivos estáticos (CSS/JS usam ?v=<data> para renovar) ---
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/webp "access plus 30 days"
+    ExpiresByType image/png "access plus 30 days"
+    ExpiresByType image/jpeg "access plus 30 days"
+    ExpiresByType image/gif "access plus 30 days"
+    ExpiresByType image/svg+xml "access plus 30 days"
+    ExpiresByType image/x-icon "access plus 30 days"
+    ExpiresByType video/mp4 "access plus 30 days"
+    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType text/css "access plus 30 days"
+    ExpiresByType application/javascript "access plus 30 days"
+    ExpiresByType text/javascript "access plus 30 days"
+</IfModule>

@@ -1,0 +1,33 @@
+node_modules/
+.env
+uploads/media/*
+!uploads/media/banner.png
+!uploads/media/bambalouni.png
+!uploads/media/mapa.png
+!uploads/media/img01.png
+!uploads/media/img02.png
+!uploads/media/img03.png
+!uploads/media/logo.png
+!uploads/media/banner.webp
+!uploads/media/bambalouni.webp
+!uploads/media/mapa.webp
+!uploads/media/img01.webp
+!uploads/media/img02.webp
+!uploads/media/img03.webp
+!uploads/media/logo.webp
+# Segredos, caches e artefatos locais
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+*.log
+coverage/
+.phpunit.cache/
+# Não versionar backups exportados ou uploads de usuários
+backups/*
+!backups/.gitkeep
+!backups/.htaccess
+# Cache gerado da página pública
+cache/*
+!cache/.gitkeep
+!cache/.htaccess
