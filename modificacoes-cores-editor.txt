@@ -1,103 +1,100 @@
-MODIFICACOES — personalização de cores no editor
+MUDANÇAS REALIZADAS - PAINEL ADMINISTRATIVO (EDITOR DE SEÇÕES)
+================================================================
 
-Objetivo
-Separar as cores de título, subtítulo, descrição e texto geral por seção.
+RESUMO
+------
+1. Novas cores editáveis por elemento (marcador, destaque, listas, botões, cards, cronograma, estatísticas).
+2. Controles do painel organizados por seção (cada seção mostra só o que funciona nela).
+3. Preview fiel ao site principal em todas as seções (usa o próprio index.php, com o mesmo CSS e JS).
 
-1. includes/section_style.php
+ARQUIVOS (5)
+------------
+[NOVO]       admin/section_preview.php
+[SUBSTITUIR] admin/editor.php
+[SUBSTITUIR] includes/section_style.php
+[SUBSTITUIR] assets/css/section-styles.css
+[SUBSTITUIR] index.php
 
-Na constante SX_COLOR_FIELDS, adicionar:
-    'subtitle_color'
-    'description_color'
 
-O resultado deve conter os dois campos entre title_color e body_color:
-    const SX_COLOR_FIELDS = ['bg_color', 'bg_color2', 'title_color', 'subtitle_color', 'description_color', 'body_color', 'accent_color', 'card_bg', 'card_text', 'card_border_color'];
+1) admin/section_preview.php  (ARQUIVO NOVO - criar na pasta admin)
+-------------------------------------------------------------------
+- Recebe por POST os campos do formulário do editor (ainda não salvos).
+- Exige login e token CSRF. Não grava nada no banco e não conta visita.
+- Monta os mesmos dados que o salvamento do editor montaria (textos, estilo validado por
+  sanitizeSectionStyle, vídeo de fundo, itens internos).
+- Define SX_SECTION_PREVIEW e inclui o index.php, que gera o HTML real do site.
+- Injeta no HTML: <base> das URLs, CSS que esconde as outras seções, script que mostra o estado
+  final das animações, bloqueia navegação dos links e informa a altura da seção ao painel.
 
-Em sectionStyleClasses(), depois da classe sx-tc, adicionar:
-    if (isset($s['subtitle_color']) && $s['subtitle_color'] !== '') $c[] = 'sx-stc';
-    if (isset($s['description_color']) && $s['description_color'] !== '') $c[] = 'sx-dc';
 
-Em sectionStyleInline(), depois da variável --sx-title-color, adicionar:
-    if (!empty($s['subtitle_color'])) $v[] = '--sx-subtitle-color:' . $s['subtitle_color'];
-    if (!empty($s['description_color'])) $v[] = '--sx-description-color:' . $s['description_color'];
+2) admin/editor.php
+-------------------------------------------------------------------
+Painel "Aparência e layout":
+- Organização por tipo de seção (hero, sobre, mapa, cultura, empreendedorismo, conhecimento,
+  cronograma, rodapé e seções personalizadas). Só aparecem os controles que valem para a seção.
+- Aba Cores agrupada: Textos | Marcador e destaques | Botões do banner | Cards | específicas
+  (Objetivos, Estatísticas, Linha do tempo, Mapa).
+- Novos campos de cor: badge_color, badge_bg, highlight_color, list_marker_color,
+  btn_primary_bg, btn_primary_text, btn_secondary_bg, btn_secondary_text, btn_secondary_border,
+  card_title_color, card_desc_color, card_subtitle_color, card_icon_bg, timeline_color,
+  stat_number_color.
+- Cores de card (fundo, texto, borda) saíram da aba Cards e foram para a aba Cores.
+- Aba Imagem só aparece onde a imagem é usada (seção personalizada, mapa, empreendedorismo).
+- Aba Cards só aparece onde existem cards; no banner a aba vira "Botões".
+- Cores padrão mostradas nos seletores passaram a espelhar o CSS real de cada seção.
+- Controles ocultos são reenviados em campos escondidos, para não perder valores já salvos.
+- Rótulo "Selo" passou a "Marcador".
+- Ícone da aba Fundo trocado (era igual ao da aba Imagem).
 
-2. admin/editor.php
+Preview:
+- Preview antigo (mockup simulado) removido.
+- Novo preview em iframe com o site real: botões Desktop / Tablet / Celular, Ampliar (Esc fecha),
+  atualização automática ao editar qualquer campo, status de atualização.
+- iframe com sandbox (isolado do painel).
 
-Na aba "Cores", substituir a única opção "Cor do texto" por estas opções:
-    $sxColor('subtitle_color', 'Cor do subtítulo', 'Usada somente quando a seção tiver um subtítulo.');
-    $sxColor('description_color', 'Cor da descrição', 'Texto descritivo abaixo do título.');
-    $sxColor('body_color', 'Cor do texto geral', 'Parágrafos e listas fora dos cards.');
+JavaScript:
+- Removido todo o código que simulava o preview.
+- Corrigido erro na lista de itens da seção Cultura (variável BASE inexistente no trecho antigo).
+- Aviso de contraste agora também confere subtítulo e descrição.
 
-No JavaScript do preview, a cor de liveSub deve usar:
-    val('subtitle_color') || val('description_color') || val('body_color')
 
-3. assets/css/section-styles.css
+3) includes/section_style.php
+-------------------------------------------------------------------
+- SX_COLOR_FIELDS recebeu os 15 novos campos de cor.
+- Nova constante SX_EXTRA_COLORS (campo => classe CSS, variável CSS).
+- sectionStyleClasses() e sectionStyleInline() passaram a aplicar as novas cores.
+- Estilos antigos já salvos continuam funcionando (campos novos entram vazios).
 
-Depois das regras .sx-tc e .sx-bc, adicionar:
-    .sx-stc .sx-subtitle { color: var(--sx-subtitle-color) !important; }
-    .sx-dc .sx-description,
-    .sx-dc :is(.titulo-section, .section-header) > p,
-    .sx-dc .hero-content > p { color: var(--sx-description-color) !important; }
 
-4. index.php
+4) assets/css/section-styles.css  (regras adicionadas no FINAL do arquivo)
+-------------------------------------------------------------------
+- Regras do marcador (cor e fundo), palavra destacada, marcações de lista, botões do banner.
+- Cards: título, descrição, frase de apoio e fundo do ícone.
+- Fundo, texto e borda de card agora também valem para os "destaques" da seção de
+  empreendedorismo e para os itens de seções personalizadas.
+- Números das estatísticas e linha/pontos do cronograma.
+- Correção de precedência: a cor do subtítulo não é mais sobrescrita pela cor da descrição
+  nem pela cor do texto geral.
+- Nenhuma regra antiga foi alterada.
 
-Em cada seção padrão (hero, sobre, mapa, cultura, empreendedorismo,
-conhecimento e cronograma), adicionar classes semânticas:
 
-    <?php if (!empty($secao['subtitle'])): ?>
-      <p class="sx-subtitle"><?= e($secao['subtitle']) ?></p>
-    <?php endif; ?>
-    <p class="sx-description"><?= e($secao['description'] ?? '') ?></p>
+5) index.php
+-------------------------------------------------------------------
+- Adicionado um único bloco (antes da linha "Só páginas geradas com dados reais do banco...").
+- O bloco só age quando a constante SX_SECTION_PREVIEW existe (somente dentro do preview do painel).
+- Para os visitantes do site, não muda nada.
 
-Trocar $secao pelo array correto: $hero, $sobre, $mapa, $cultura, $emp,
-$conhecimento ou $cronograma.
 
-Nas seções personalizadas, aplicar:
-    class="sx-subtitle" no parágrafo do subtítulo
-    class="sx-description" no bloco da descrição
+COMO INSTALAR
+-------------
+1. Copie admin/section_preview.php para a pasta admin do projeto (arquivo novo).
+2. Substitua os outros 4 arquivos pelos novos, mantendo as mesmas pastas.
+3. Atualize o painel com Ctrl+F5.
 
-Resultado
-Cada seção passa a salvar e aplicar suas próprias cores para título,
-subtítulo, descrição e texto geral. O subtítulo também passa a ser exibido
-no site quando estiver preenchido.
 
-5. Paleta do site principal no painel
-
-Em admin/editor.php, substituir a constante PALETTE por:
-    const PALETTE = ['#ff2d2d', '#e02424', '#111827', '#64748b', '#4b5563', '#ffffff', '#e5e7eb', '#fafafa', '#f3f4f6', '#f1f5f9', '#e2e8f0', '#94a3b8', '#cbd5e1'];
-
-Essas são as cores já definidas no arquivo assets/css/style.css. Elas
-aparecem como atalhos circulares em todos os campos de “Aparência e layout > Cores”.
-
-6. Exibição correta do padrão no painel
-
-No helper $sxColor de admin/editor.php, usar cores padrão do site somente para
-exibição do seletor quando o valor salvo estiver vazio. Mapa recomendado:
-    título: #111827; subtítulo: #4b5563; descrição/texto: #64748b;
-    destaque: #ff2d2d; fundo: #fafafa; card: #ffffff; borda: #e5e7eb.
-
-No preview JavaScript, usar esses mesmos valores como fallback e fundo #ffffff.
-Assim, uma seção sem personalização aparece no painel com o visual claro do
-site principal, sem gravar cores novas automaticamente.
-
-7. Quadro Objetivos e Competências (seção Sobre)
-
-Adicionar objectives_bg e objectives_text a SX_COLOR_FIELDS em
-includes/section_style.php, gerando as classes sx-ob e sx-ot e as variáveis
---sx-objectives-bg e --sx-objectives-text.
-
-No CSS, aplicar as variáveis em .objetivos-box. No painel, adicionar os campos:
-    Fundo de Objetivos e Competências
-    Texto de Objetivos e Competências
-
-Eles editam exclusivamente o quadro vermelho da seção “Sobre o Projeto”.
-
-8. Elementos exclusivos do Mapa Interativo
-
-Adicionar campos de cor próprios para a seção identificada como "mapa":
-    map_box_bg, map_box_border, map_marker_color, map_marker_border,
-    map_info_bg, map_info_text, map_info_border, map_info_icon_bg,
-    map_info_code_color.
-
-Eles permitem editar, respectivamente, a moldura do mapa, marcadores e cada
-parte do cartão de informações. Os controles só devem aparecer no editor da
-seção Mapa Interativo.
+OBSERVAÇÕES
+-----------
+- Não foi possível rodar PHP/MySQL no ambiente de desenvolvimento; teste o editor em uma seção
+  real antes de publicar.
+- Bug existente no site (não alterado): no banner, se o subtítulo estiver preenchido, a descrição
+  fica invisível, porque o assets/js/index.js só revela o primeiro parágrafo do banner.

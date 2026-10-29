@@ -449,8 +449,31 @@ require_once __DIR__ . '/../includes/admin_header.php';
 }
 </style>
 
+<style>
+    /* Preview fiel da seção */
+    .pv-card{background:#fff;border:1px solid #e2e8f0;border-radius:1.25rem;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 10px 30px -18px rgba(15,23,42,.35)}
+    .pv-bar{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;padding:.6rem .8rem;border-bottom:1px solid #e2e8f0;background:#f8fafc}
+    .pv-dots{display:flex;gap:5px}.pv-dots i{width:9px;height:9px;border-radius:50%;background:#cbd5e1;display:block}
+    .pv-url{flex:1;min-width:120px;font-size:.7rem;color:#64748b;background:#fff;border:1px solid #e2e8f0;border-radius:999px;padding:.25rem .7rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .pv-devices{display:inline-flex;background:#e2e8f0;border-radius:.6rem;padding:2px}
+    .pv-dev,.pv-expand{font-size:.7rem;font-weight:600;color:#64748b;border:0;background:transparent;padding:.3rem .65rem;border-radius:.5rem;cursor:pointer}
+    .pv-dev:hover,.pv-expand:hover{color:#0f172a}
+    .pv-dev.is-active{background:#fff;color:#0f172a;box-shadow:0 1px 2px rgba(15,23,42,.15)}
+    .pv-expand{border:1px solid #e2e8f0;background:#fff}
+    .pv-viewport{position:relative;background:#e2e8f0;overflow:auto;padding:12px;max-height:calc(100vh - 11rem);min-height:260px;scrollbar-gutter:stable}
+    .pv-stage{position:relative;margin:0 auto;background:#fff;overflow:hidden;box-shadow:0 2px 14px rgba(15,23,42,.18);transform-origin:top left}
+    .pv-frame{position:absolute;left:0;top:0;border:0;background:#fff;transform-origin:0 0;max-width:none}
+    .pv-foot{display:flex;justify-content:space-between;gap:.5rem;flex-wrap:wrap;padding:.5rem .8rem;border-top:1px solid #e2e8f0;font-size:.68rem;color:#94a3b8}
+    #pvStatus.is-busy{color:#b45309}#pvStatus.is-ok{color:#15803d}#pvStatus.is-error{color:#b91c1c;font-weight:700}
+    #pvColumn.pv-full{position:fixed;inset:0;z-index:90;padding:14px;background:rgba(15,23,42,.62);max-height:none}
+    #pvColumn.pv-full .pv-card{height:100%}
+    #pvColumn.pv-full .pv-viewport{flex:1;max-height:none}
+    .sxp-group{margin-top:.35rem;padding-top:.6rem;border-top:1px dashed #e2e8f0;display:flex;flex-direction:column;gap:.1rem}
+    .sxp-group b{font-size:.8rem;color:#0f172a}.sxp-group small{color:#94a3b8;font-size:.7rem}
+</style>
+
 <!-- Formulário Principal e Preview ao Lado -->
-<form method="POST" enctype="multipart/form-data" class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+<form method="POST" enctype="multipart/form-data" id="editorForm" class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
     <input type="hidden" name="csrf_token" value="<?= getCsrfToken() ?>">
 
     <!-- Coluna Esquerda: Formulário de Edição (7 Colunas) -->
@@ -499,7 +522,7 @@ require_once __DIR__ . '/../includes/admin_header.php';
             </div>
             <div>
                 <label class="block text-xs font-semibold text-slate-700 mb-2">Caminho do vídeo (opcional)</label>
-                <input type="text" id="inputVideo" name="video_path" value="<?= e($section['video_path'] ?? '') ?>" oninput="previewSelectedVideo(this.value)" class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl" placeholder="assets/img/video.mp4">
+                <input type="text" id="inputVideo" name="video_path" value="<?= e($section['video_path'] ?? '') ?>" class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl" placeholder="assets/img/video.mp4">
             </div>
         </div>
         <label class="flex items-center gap-2 text-xs font-semibold text-slate-700"><input type="checkbox" name="is_visible" value="1" <?= !empty($section['is_visible']) ? 'checked' : '' ?>> Exibir esta seção no site público</label>
@@ -593,7 +616,52 @@ require_once __DIR__ . '/../includes/admin_header.php';
             $sxGlyph = [
                 'text_align' => ['left' => '⇤', 'center' => '↔', 'right' => '⇥'],
             ];
-            $sxChips = function (string $name, string $label, string $hint = '') use ($sxChoices, $styleValues, $sxGlyph) {
+            // O que cada seção do site realmente tem: decide quais controles aparecem (o resto é preservado, escondido).
+            $sid = (string)($section['identifier'] ?? '');
+            $sxIsCustom = !in_array($sid, ['hero', 'sobre', 'mapa', 'cultura', 'empreendedorismo', 'conhecimento', 'cronograma', 'rodape'], true);
+            $sxIsFooter = ($sid === 'rodape');
+            $sxHas = [
+                'header'      => !$sxIsFooter && $sid !== 'hero' && !$sxIsCustom,                   // título/subtítulo dentro de .section-header
+                'subtitle'    => !$sxIsFooter,
+                'badge'       => !$sxIsFooter,
+                'highlight'   => in_array($sid, ['hero', 'empreendedorismo', 'conhecimento'], true),
+                'buttons'     => $sid === 'hero',
+                'cards'       => in_array($sid, ['sobre', 'cultura', 'empreendedorismo', 'conhecimento', 'cronograma'], true) || $sxIsCustom,
+                'card_chips'  => in_array($sid, ['sobre', 'cultura', 'empreendedorismo', 'conhecimento', 'cronograma', 'mapa'], true),
+                'card_icon'   => in_array($sid, ['sobre', 'cultura', 'empreendedorismo', 'conhecimento'], true),
+                'card_sub'    => in_array($sid, ['cultura', 'cronograma'], true),
+                'list_marker' => in_array($sid, ['sobre', 'empreendedorismo', 'conhecimento'], true),
+                'grid'        => in_array($sid, ['sobre', 'cultura', 'conhecimento'], true),
+                'image'       => $sxIsCustom || in_array($sid, ['mapa', 'empreendedorismo'], true),
+            ];
+            $sxRendered = []; // campos com controle visível; os demais voltam escondidos para nada se perder ao salvar
+
+            // Cor mostrada no seletor enquanto o campo está em "padrão" (espelha o CSS do site; não é gravada sozinha).
+            $sxColorDefaults = [
+                'bg_color' => '#ffffff', 'bg_color2' => '#ffffff',
+                'title_color' => '#111827', 'subtitle_color' => '#64748b', 'description_color' => '#64748b', 'body_color' => '#64748b',
+                'accent_color' => '#ff2d2d', 'objectives_bg' => '#ff2d2d', 'objectives_text' => '#ffffff',
+                'card_bg' => '#ffffff', 'card_text' => '#111827', 'card_border_color' => '#e5e7eb',
+                'card_title_color' => '#111827', 'card_desc_color' => '#64748b', 'card_subtitle_color' => '#64748b', 'card_icon_bg' => '#ffe5e5',
+                'badge_color' => '#ff2d2d', 'badge_bg' => '#ffe5e5', 'highlight_color' => '#ff2d2d', 'list_marker_color' => '#ff2d2d',
+                'btn_primary_bg' => '#ff2d2d', 'btn_primary_text' => '#ffffff', 'btn_secondary_bg' => '#ffffff', 'btn_secondary_text' => '#ffffff', 'btn_secondary_border' => '#ffffff',
+                'timeline_color' => '#ff2d2d', 'stat_number_color' => '#ff2d2d',
+                'map_box_bg' => '#f1f5f9', 'map_box_border' => '#e5e7eb', 'map_marker_color' => '#ff2d2d', 'map_marker_border' => '#ffffff',
+                'map_info_bg' => '#ffffff', 'map_info_text' => '#111827', 'map_info_border' => '#e5e7eb', 'map_info_icon_bg' => '#ff2d2d', 'map_info_code_color' => '#e2e8f0',
+            ];
+            $sxColorSection = [
+                'hero' => ['bg_color' => '#0f172a', 'title_color' => '#ffffff', 'subtitle_color' => '#e2e8f0', 'description_color' => '#e2e8f0', 'body_color' => '#e2e8f0', 'badge_color' => '#ffffff'],
+                'rodape' => ['bg_color' => '#0f172a', 'title_color' => '#ffffff', 'body_color' => '#94a3b8'],
+                'empreendedorismo' => ['bg_color' => '#fafafa', 'card_icon_bg' => '#fff1f1'],
+                'conhecimento' => ['bg_color' => '#fafafa', 'card_icon_bg' => '#fff1f1'],
+                'cronograma' => ['bg_color' => '#fafafa'],
+                'cultura' => ['card_icon_bg' => '#ffffff'],
+            ];
+            if ($sxIsCustom) $sxColorDefaults = array_merge($sxColorDefaults, ['bg_color' => '#f8fafc', 'badge_color' => '#64748b']);
+            if (isset($sxColorSection[$sid])) $sxColorDefaults = array_merge($sxColorDefaults, $sxColorSection[$sid]);
+
+            $sxChips = function (string $name, string $label, string $hint = '') use ($sxChoices, $styleValues, $sxGlyph, &$sxRendered) {
+                $sxRendered[$name] = true;
                 echo '<div class="sxp-field"><span class="sxp-label">' . e($label) . '</span><div class="sxp-chips" role="radiogroup" aria-label="' . e($label) . '">';
                 foreach ($sxChoices[$name] as $value => $text) {
                     $glyph = $sxGlyph[$name][$value] ?? '';
@@ -601,7 +669,8 @@ require_once __DIR__ . '/../includes/admin_header.php';
                 }
                 echo '</div>' . ($hint !== '' ? '<small>' . e($hint) . '</small>' : '') . '</div>';
             };
-            $sxSelect = function (string $name, string $label, ?array $options = null) use ($sxChoices, $styleValues) {
+            $sxSelect = function (string $name, string $label, ?array $options = null) use ($sxChoices, $styleValues, &$sxRendered) {
+                $sxRendered[$name] = true;
                 $options = $options ?? $sxChoices[$name];
                 echo '<label class="sxp-field"><span class="sxp-label">' . e($label) . '</span><select name="sx[' . e($name) . ']">';
                 foreach ($options as $value => $text) {
@@ -609,30 +678,19 @@ require_once __DIR__ . '/../includes/admin_header.php';
                 }
                 echo '</select></label>';
             };
-            $sxColor = function (string $name, string $label, string $hint = '') use ($styleValues) {
+            $sxColor = function (string $name, string $label, string $hint = '') use ($styleValues, $sxColorDefaults, &$sxRendered) {
+                $sxRendered[$name] = true;
                 $v = $styleValues[$name];
-                // Cor exibida enquanto o campo está em "padrão": corresponde ao CSS do site,
-                // mas não é enviada no formulário até que o administrador escolha uma cor.
-                $siteColorDefaults = [
-                    'bg_color' => '#fafafa', 'bg_color2' => '#ffffff',
-                    'title_color' => '#111827', 'subtitle_color' => '#4b5563',
-                    'description_color' => '#64748b', 'body_color' => '#64748b',
-                    'accent_color' => '#ff2d2d', 'objectives_bg' => '#ff2d2d',
-                    'objectives_text' => '#ffffff', 'card_bg' => '#ffffff',
-                    'map_box_bg' => '#f1f5f9', 'map_box_border' => '#e5e7eb',
-                    'map_marker_color' => '#ff2d2d', 'map_marker_border' => '#ffffff',
-                    'map_info_bg' => '#ffffff', 'map_info_text' => '#111827',
-                    'map_info_border' => '#e5e7eb', 'map_info_icon_bg' => '#ff2d2d',
-                    'map_info_code_color' => '#e2e8f0',
-                    'card_text' => '#111827', 'card_border_color' => '#e5e7eb'
-                ];
-                $displayColor = $v !== '' ? $v : ($siteColorDefaults[$name] ?? '#888888');
+                $displayColor = $v !== '' ? $v : ($sxColorDefaults[$name] ?? '#888888');
                 echo '<div class="sxp-field sxp-color" data-field="' . e($name) . '"><span class="sxp-label">' . e($label) . '</span><div class="sxp-color-row">'
                    . '<input type="color" class="sxp-picker" value="' . e($displayColor) . '" aria-label="' . e($label) . '">'
                    . '<input type="text" class="sxp-hex" name="sx[' . e($name) . ']" value="' . e($v) . '" placeholder="padrão" maxlength="7" spellcheck="false" autocomplete="off">'
                    . '<button type="button" class="sxp-clear" title="Voltar ao padrão do site" aria-label="Limpar ' . e($label) . '">×</button></div>'
                    . '<div class="sxp-swatches"></div>'
                    . ($hint !== '' ? '<small>' . e($hint) . '</small>' : '') . '</div>';
+            };
+            $sxGroup = function (string $title, string $hint = '') {
+                echo '<div class="sxp-wide sxp-group"><b>' . e($title) . '</b>' . ($hint !== '' ? '<small>' . e($hint) . '</small>' : '') . '</div>';
             };
             $sxFontOptions = ['' => 'Padrão do site'];
             foreach (SX_FONTS as $fk => $fv) { $sxFontOptions[$fk] = $fv['label']; }
@@ -656,7 +714,9 @@ require_once __DIR__ . '/../includes/admin_header.php';
                     error_log('Erro ao listar mídia para o fundo: ' . $e->getMessage()); 
                 }
             }
-            $sxTabs = ['layout' => ['📐', 'Layout'], 'midia' => ['🖼️', 'Imagem'], 'fundo' => ['🖼️', 'Fundo'], 'texto' => ['🔤', 'Texto'], 'cores' => ['🎨', 'Cores'], 'cards' => ['🃏', 'Cards e botões'], 'efeitos' => ['✨', 'Efeitos']];
+            $sxTabs = ['layout' => ['📐', 'Layout'], 'midia' => ['🖼️', $sid === 'mapa' ? 'Imagem do mapa' : 'Imagem'], 'fundo' => ['🌄', 'Fundo'], 'texto' => ['🔤', 'Texto'], 'cores' => ['🎨', 'Cores'], 'cards' => ['🃏', $sid === 'hero' ? 'Botões' : 'Cards'], 'efeitos' => ['✨', 'Efeitos']];
+            if (!$sxHas['image']) unset($sxTabs['midia']);
+            if (!$sxHas['card_chips'] && !$sxHas['buttons']) unset($sxTabs['cards']);
             $sxPresets = [
                 'clean' => ['Claro elegante', 'linear-gradient(135deg,#ffffff,#e2e8f0)'], 'dark' => ['Escuro', 'linear-gradient(135deg,#0b1020,#1e293b)'],
                 'gradient' => ['Degradê', 'linear-gradient(135deg,#4f46e5,#9333ea)'], 'soft' => ['Suave', 'linear-gradient(135deg,#f0f9ff,#e0e7ff)'],
@@ -749,7 +809,7 @@ require_once __DIR__ . '/../includes/admin_header.php';
         </style>
 
         <details class="sxp" id="sxPanel" <?= !sectionStyleIsEmpty($styleValues) ? 'open' : '' ?>>
-            <summary><span style="font-size:1.2rem">🎨</span><b>3. Aparência e layout</b><small>posição, fontes, cores, fundo, cards e efeitos — com preview ao vivo</small></summary>
+            <summary><span style="font-size:1.2rem">🎨</span><b>3. Aparência e layout</b><small>posição, fontes, cores, fundo, cards e efeitos — veja o resultado no preview ao lado</small></summary>
             <div class="sxp-body">
                 <div>
                     <p class="sxp-label" style="margin:0 0 .45rem">Estilos prontos <span style="font-weight:500;color:#94a3b8">(ponto de partida — ajuste depois)</span></p>
@@ -773,9 +833,11 @@ require_once __DIR__ . '/../includes/admin_header.php';
                         <div class="sxp-wide"><?php $sxChips('content_width', 'Largura do conteúdo', 'Limita a largura do texto e dos cards; "Tela cheia" ocupa toda a largura.'); ?></div>
                         <div class="sxp-wide"><?php $sxChips('padding_y', 'Espaço acima e abaixo da seção'); ?></div>
                         <div class="sxp-wide"><?php $sxChips('min_height', 'Altura mínima da seção'); ?></div>
-                        <div class="sxp-wide"><?php $sxChips('header_gap', 'Distância entre o título e o conteúdo'); ?></div>
-                        <div class="sxp-wide"><?php $sxChips('grid_cols', 'Cards por linha', 'Em telas menores a grade reduz sozinha.'); ?></div>
-                        <div class="sxp-wide"><?php $sxChips('grid_gap', 'Espaço entre os cards'); ?></div>
+                        <?php if ($sxHas['header']): ?><div class="sxp-wide"><?php $sxChips('header_gap', 'Distância entre o título e o conteúdo'); ?></div><?php endif; ?>
+                        <?php if ($sxHas['grid']): ?>
+                            <div class="sxp-wide"><?php $sxChips('grid_cols', 'Cards por linha', 'Em telas menores a grade reduz sozinha.'); ?></div>
+                            <div class="sxp-wide"><?php $sxChips('grid_gap', 'Espaço entre os cards'); ?></div>
+                        <?php endif; ?>
                         <div class="sxp-wide"><?php $sxChips('hide_on', 'Visibilidade por dispositivo'); ?></div>
                     </div>
                 </div>
@@ -783,8 +845,10 @@ require_once __DIR__ . '/../includes/admin_header.php';
                 <!-- IMAGEM NO CONTEÚDO -->
                 <div class="sxp-pane" id="sxp-pane-midia" data-pane="midia" role="tabpanel" hidden>
                     <div class="sxp-grid">
-                        <div class="sxp-wide"><p class="sxp-label">Imagem dentro do conteúdo</p><small>Esta imagem é um elemento real do layout, independente do fundo da seção.</small></div>
+                        <div class="sxp-wide"><p class="sxp-label"><?= $sid === 'mapa' ? 'Imagem do mapa' : ($sid === 'empreendedorismo' ? 'Imagem padrão dos produtos' : 'Imagem dentro do conteúdo') ?></p><small><?= $sid === 'mapa' ? 'Imagem exibida dentro da moldura do mapa.' : ($sid === 'empreendedorismo' ? 'Usada nos produtos que não têm imagem própria.' : 'Esta imagem é um elemento real do layout, independente do fundo da seção.') ?></small></div>
+                        <?php if ($sxIsCustom): ?>
                         <div class="sxp-wide sxp-field"><span class="sxp-label">Modelo visual</span><div class="sxp-layouts" role="radiogroup" aria-label="Modelo visual"><?php foreach (['' => ['Texto', 'text'], 'image-left' => ['Imagem à esquerda', 'left'], 'image-right' => ['Imagem à direita', 'right'], 'image-top' => ['Imagem acima', 'top'], 'image-bottom' => ['Texto acima', 'bottom']] as $lv => $ld): ?><label class="sxp-layout <?= e($ld[1]) ?>"><input type="radio" name="sx[content_layout]" value="<?= e($lv) ?>" <?= $styleValues['content_layout'] === $lv ? 'checked' : '' ?>><span class="sxp-layout-icon"><i class="m"></i><i class="t"></i></span><?= e($ld[0]) ?></label><?php endforeach; ?></div><small>Imagem e texto lado a lado se reorganizam automaticamente no celular.</small></div>
+                        <?php endif; ?>
                         <div class="sxp-wide">
                             <span class="sxp-label">Selecionar imagem da biblioteca</span>
                             <div class="sxp-media-grid" style="margin-top:.4rem">
@@ -794,12 +858,14 @@ require_once __DIR__ . '/../includes/admin_header.php';
                                 <?php endforeach; ?>
                             </div>
                         </div>
-                        <div class="sxp-wide"><?php $sxChips('media_width', 'Largura da imagem'); ?></div>
-                        <div class="sxp-wide"><?php $sxChips('media_ratio', 'Proporção da imagem'); ?></div>
-                        <div class="sxp-wide"><?php $sxChips('media_fit', 'Ajuste da imagem'); ?></div>
-                        <div class="sxp-wide"><?php $sxChips('media_radius', 'Cantos da imagem'); ?></div>
-                        <div class="sxp-wide"><?php $sxChips('content_gap', 'Espaço entre imagem e conteúdo'); ?></div>
-                        <div class="sxp-wide"><?php $sxChips('content_vertical', 'Alinhamento vertical'); ?></div>
+                        <?php if ($sxIsCustom): ?>
+                            <div class="sxp-wide"><?php $sxChips('media_width', 'Largura da imagem'); ?></div>
+                            <div class="sxp-wide"><?php $sxChips('media_ratio', 'Proporção da imagem'); ?></div>
+                            <div class="sxp-wide"><?php $sxChips('media_fit', 'Ajuste da imagem'); ?></div>
+                            <div class="sxp-wide"><?php $sxChips('media_radius', 'Cantos da imagem'); ?></div>
+                            <div class="sxp-wide"><?php $sxChips('content_gap', 'Espaço entre imagem e conteúdo'); ?></div>
+                            <div class="sxp-wide"><?php $sxChips('content_vertical', 'Alinhamento vertical'); ?></div>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -853,6 +919,7 @@ require_once __DIR__ . '/../includes/admin_header.php';
                 <div class="sxp-pane" id="sxp-pane-texto" data-pane="texto" role="tabpanel" hidden>
                     <div class="sxp-grid">
                         <?php $sxSelect('title_font', 'Fonte do título', $sxFontOptions); $sxSelect('body_font', 'Fonte do texto', $sxFontOptions); ?>
+                        <?php if (!$sxIsFooter): ?>
                         <div class="sxp-wide"><?php $sxChips('title_size', 'Tamanho do título'); ?></div>
                         <div class="sxp-wide"><?php $sxChips('title_weight', 'Peso do título'); ?></div>
                         <div class="sxp-wide"><?php $sxChips('title_transform', 'Caixa do título'); ?></div>
@@ -861,6 +928,7 @@ require_once __DIR__ . '/../includes/admin_header.php';
                         <div class="sxp-wide"><?php $sxChips('title_leading', 'Altura da linha do título', 'Útil quando o título quebra em várias linhas.'); ?></div>
                         <div class="sxp-wide"><?php $sxChips('title_effect', 'Efeito no título'); ?></div>
                         <div class="sxp-wide"><?php $sxChips('title_decor', 'Detalhe sob o título'); ?></div>
+                        <?php endif; ?>
                         <div class="sxp-wide"><?php $sxChips('body_size', 'Tamanho do texto'); ?></div>
                         <div class="sxp-wide"><?php $sxChips('body_leading', 'Altura da linha do texto'); ?></div>
                     </div>
@@ -870,16 +938,65 @@ require_once __DIR__ . '/../includes/admin_header.php';
                 <div class="sxp-pane" id="sxp-pane-cores" data-pane="cores" role="tabpanel" hidden>
                     <div class="sxp-grid">
                         <?php
-                            $sxColor('title_color', 'Cor do título');
-                            $sxColor('subtitle_color', 'Cor do subtítulo', 'Usada somente quando a seção tiver um subtítulo.');
-                            $sxColor('description_color', 'Cor da descrição', 'Texto descritivo abaixo do título.');
-                            $sxColor('body_color', 'Cor do texto geral', 'Parágrafos e listas fora dos cards.');
-                            $sxColor('accent_color', 'Cor de destaque', 'Selo, palavra destacada, detalhe sob o título e botão principal.');
-                            if (($section['identifier'] ?? '') === 'sobre') {
-                                $sxColor('objectives_bg', 'Fundo de Objetivos e Competências', 'Altera o quadro vermelho desta seção.');
-                                $sxColor('objectives_text', 'Texto de Objetivos e Competências', 'Altera títulos, itens e marcações deste quadro.');
+                            // 1) Textos
+                            $sxGroup($sxIsFooter ? 'Textos do rodapé' : 'Textos da seção');
+                            $sxColor('title_color', $sxIsFooter ? 'Cor dos títulos' : 'Cor do título');
+                            if ($sxHas['subtitle']) {
+                                $sxColor('subtitle_color', 'Cor do subtítulo', 'Usada somente quando a seção tiver um subtítulo.');
+                                $sxColor('description_color', 'Cor da descrição', 'Texto descritivo abaixo do título.');
                             }
-                            if (($section['identifier'] ?? '') === 'mapa') {
+                            $sxColor('body_color', $sxIsFooter ? 'Cor dos textos' : 'Cor do texto geral', $sxIsFooter ? '' : 'Parágrafos e listas fora dos cards.');
+
+                            // 2) Marcador e destaques
+                            if (!$sxIsFooter) {
+                                $sxGroup('Marcador e destaques', 'Marcador = a etiqueta pequena acima do título.');
+                                if ($sxHas['badge']) {
+                                    $sxColor('badge_color', 'Cor do marcador', 'Texto da etiqueta.');
+                                    $sxColor('badge_bg', 'Fundo do marcador', 'Sem fundo por padrão.');
+                                }
+                                if ($sxHas['highlight']) $sxColor('highlight_color', 'Palavra destacada no título');
+                                if ($sxHas['list_marker']) $sxColor('list_marker_color', 'Marcações das listas (✓ • →)');
+                                $sxColor('accent_color', 'Cor de destaque geral', 'Detalhe sob o título, botão principal e pontos. As cores específicas têm prioridade.');
+                            }
+
+                            // 3) Botões do banner
+                            if ($sxHas['buttons']) {
+                                $sxGroup('Botões do banner');
+                                $sxColor('btn_primary_bg', 'Botão principal: fundo');
+                                $sxColor('btn_primary_text', 'Botão principal: texto');
+                                $sxColor('btn_secondary_bg', 'Botão secundário: fundo', 'Transparente por padrão.');
+                                $sxColor('btn_secondary_text', 'Botão secundário: texto');
+                                $sxColor('btn_secondary_border', 'Botão secundário: borda');
+                            }
+
+                            // 4) Cards
+                            if ($sxHas['cards']) {
+                                $sxGroup('Cards', 'Título, descrição e demais detalhes de cada card.');
+                                $sxColor('card_bg', 'Fundo dos cards');
+                                $sxColor('card_border_color', 'Borda dos cards');
+                                $sxColor('card_title_color', 'Título dos cards');
+                                $sxColor('card_desc_color', 'Descrição dos cards');
+                                if ($sxHas['card_sub']) $sxColor('card_subtitle_color', $sid === 'cronograma' ? 'Data das etapas' : 'Frase de apoio dos cards');
+                                if ($sxHas['card_icon']) $sxColor('card_icon_bg', 'Fundo do ícone dos cards');
+                                $sxColor('card_text', 'Texto geral dos cards', 'Vale para todo texto do card; título e descrição acima têm prioridade.');
+                            }
+
+                            // 5) Específicas de cada seção
+                            if ($sid === 'sobre') {
+                                $sxGroup('Objetivos e Competências');
+                                $sxColor('objectives_bg', 'Fundo do quadro', 'Altera o quadro vermelho desta seção.');
+                                $sxColor('objectives_text', 'Texto do quadro', 'Altera títulos, itens e marcações deste quadro.');
+                            }
+                            if ($sid === 'conhecimento') {
+                                $sxGroup('Estatísticas');
+                                $sxColor('stat_number_color', 'Números das estatísticas');
+                            }
+                            if ($sid === 'cronograma') {
+                                $sxGroup('Linha do tempo');
+                                $sxColor('timeline_color', 'Linha, pontos e etapa ativa');
+                            }
+                            if ($sid === 'mapa') {
+                                $sxGroup('Mapa interativo');
                                 $sxColor('map_box_bg', 'Fundo da moldura do mapa');
                                 $sxColor('map_box_border', 'Borda da moldura do mapa');
                                 $sxColor('map_marker_color', 'Cor dos marcadores');
@@ -897,13 +1014,18 @@ require_once __DIR__ . '/../includes/admin_header.php';
                 <!-- CARDS E BOTÕES -->
                 <div class="sxp-pane" id="sxp-pane-cards" data-pane="cards" role="tabpanel" hidden>
                     <div class="sxp-grid">
-                        <div class="sxp-wide"><?php $sxChips('card_style', 'Estilo dos cards'); ?></div>
-                        <div class="sxp-wide"><?php $sxChips('card_radius', 'Cantos dos cards'); ?></div>
-                        <div class="sxp-wide"><?php $sxChips('card_border_width', 'Espessura da borda'); ?></div>
-                        <div class="sxp-wide"><?php $sxChips('card_shadow', 'Intensidade da sombra'); ?></div>
-                        <div class="sxp-wide"><?php $sxChips('card_hover', 'Efeito ao passar o mouse'); ?></div>
-                        <?php $sxColor('card_bg', 'Fundo dos cards'); $sxColor('card_text', 'Texto dos cards'); $sxColor('card_border_color', 'Cor da borda'); ?>
-                        <div class="sxp-wide"><?php $sxChips('btn_radius', 'Formato dos botões'); ?></div>
+                        <?php if ($sxHas['card_chips']): ?>
+                            <div class="sxp-wide"><small>As cores dos cards ficam na aba <b>Cores</b>.</small></div>
+                            <div class="sxp-wide"><?php $sxChips('card_style', 'Estilo dos cards'); ?></div>
+                            <div class="sxp-wide"><?php $sxChips('card_radius', 'Cantos dos cards'); ?></div>
+                            <div class="sxp-wide"><?php $sxChips('card_border_width', 'Espessura da borda'); ?></div>
+                            <div class="sxp-wide"><?php $sxChips('card_shadow', 'Intensidade da sombra'); ?></div>
+                            <div class="sxp-wide"><?php $sxChips('card_hover', 'Efeito ao passar o mouse'); ?></div>
+                        <?php endif; ?>
+                        <?php if ($sxHas['buttons']): ?>
+                            <div class="sxp-wide"><small>As cores dos botões ficam na aba <b>Cores</b>.</small></div>
+                            <div class="sxp-wide"><?php $sxChips('btn_radius', 'Formato dos botões'); ?></div>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -911,18 +1033,29 @@ require_once __DIR__ . '/../includes/admin_header.php';
                 <div class="sxp-pane" id="sxp-pane-efeitos" data-pane="efeitos" role="tabpanel" hidden>
                     <div class="sxp-grid">
                         <div class="sxp-wide"><?php $sxChips('animation', 'Animação ao rolar a página', 'Respeita a opção "reduzir movimento" do sistema do visitante.'); ?></div>
+                        <?php if (!$sxIsFooter): ?>
                         <div class="sxp-wide sxp-field">
-                            <span class="sxp-label">Selo</span>
-                            <label class="sxp-switch"><input type="checkbox" name="sx[hide_badge]" value="1" <?= $styleValues['hide_badge'] === '1' ? 'checked' : '' ?>> Ocultar o selo (etiqueta pequena acima do título)</label>
+                            <span class="sxp-label">Marcador</span>
+                            <label class="sxp-switch"><input type="checkbox" name="sx[hide_badge]" value="1" <?= $styleValues['hide_badge'] === '1' ? 'checked' : '' ?>> Ocultar o marcador (etiqueta pequena acima do título)</label>
                         </div>
                         <div class="sxp-wide sxp-field"><span class="sxp-label">Elementos visíveis</span>
                             <label class="sxp-switch"><input type="checkbox" name="sx[hide_title]" value="1" <?= $styleValues['hide_title'] === '1' ? 'checked' : '' ?>> Ocultar título</label>
                             <label class="sxp-switch"><input type="checkbox" name="sx[hide_description]" value="1" <?= $styleValues['hide_description'] === '1' ? 'checked' : '' ?>> Ocultar descrição</label>
-                            <label class="sxp-switch"><input type="checkbox" name="sx[hide_buttons]" value="1" <?= $styleValues['hide_buttons'] === '1' ? 'checked' : '' ?>> Ocultar botões</label>
-                            <label class="sxp-switch"><input type="checkbox" name="sx[hide_media]" value="1" <?= $styleValues['hide_media'] === '1' ? 'checked' : '' ?>> Ocultar imagem</label>
+                            <?php if ($sxHas['buttons']): ?><label class="sxp-switch"><input type="checkbox" name="sx[hide_buttons]" value="1" <?= $styleValues['hide_buttons'] === '1' ? 'checked' : '' ?>> Ocultar botões</label><?php endif; ?>
+                            <?php if ($sxIsCustom): ?><label class="sxp-switch"><input type="checkbox" name="sx[hide_media]" value="1" <?= $styleValues['hide_media'] === '1' ? 'checked' : '' ?>> Ocultar imagem</label><?php endif; ?>
                         </div>
+                        <?php endif; ?>
                     </div>
                 </div>
+
+                <?php
+                    // Controles que não se aplicam a esta seção ficam escondidos, mas o valor salvo é preservado.
+                    $sxPreserve = array_merge(array_keys($sxChoices), SX_COLOR_FIELDS);
+                    foreach (array_unique($sxPreserve) as $pname):
+                        if (isset($sxRendered[$pname]) || !isset($styleValues[$pname]) || $styleValues[$pname] === '') continue;
+                        if (in_array($pname, ['bg_image', 'bg_overlay', 'bg_fixed'], true)) continue; ?>
+                    <input type="hidden" name="sx[<?= e($pname) ?>]" value="<?= e((string)$styleValues[$pname]) ?>">
+                <?php endforeach; ?>
 
                 <div class="sxp-foot">
                     <div id="sxContrast" class="hint" role="status" aria-live="polite"></div>
@@ -967,138 +1100,27 @@ require_once __DIR__ . '/../includes/admin_header.php';
         </div>
     </div>
 
-    <!-- Coluna Direita: Preview Vivo da Seção com Redimensionamento (5 Colunas) -->
-    <div class="lg:col-span-5 min-w-0 flex flex-col lg:sticky lg:top-6">
-        <!-- Barra de Navegação Mockup Browser -->
-        <div class="bg-white rounded-t-3xl border border-b-0 border-slate-200 p-4 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <span class="w-3 h-3 rounded-full bg-slate-300"></span>
-                <span class="w-3 h-3 rounded-full bg-slate-300"></span>
-                <span class="w-3 h-3 rounded-full bg-slate-300"></span>
-                <span class="ml-2 text-xs font-medium text-slate-400 bg-slate-100 px-3 py-1 rounded-full">projetotunisia.com.br/#<?= e($section['identifier']) ?></span>
+    <!-- Coluna Direita: preview fiel. O quadro mostra o site real (index.php) com os dados do formulário, ainda não salvos. -->
+    <div class="lg:col-span-5 min-w-0 flex flex-col lg:sticky lg:top-6" id="pvColumn">
+        <div class="pv-card" id="pvCard">
+            <div class="pv-bar">
+                <span class="pv-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+                <span class="pv-url" title="Endereço da seção no site">projetotunisia.com.br/#<?= e($section['identifier'] ?? 'nova-secao') ?></span>
+                <div class="pv-devices" role="group" aria-label="Tamanho da tela">
+                    <button type="button" class="pv-dev is-active" data-mode="desktop" aria-pressed="true">Desktop</button>
+                    <button type="button" class="pv-dev" data-mode="tablet" aria-pressed="false">Tablet</button>
+                    <button type="button" class="pv-dev" data-mode="mobile" aria-pressed="false">Celular</button>
+                </div>
+                <button type="button" class="pv-expand" id="pvExpand" aria-pressed="false" title="Ampliar o preview (Esc fecha)">⤢ Ampliar</button>
             </div>
-
-            <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs font-medium text-slate-600">
-                <button type="button" id="btnPreviewDesktop" onclick="setPreviewWidth('desktop')" class="px-3 py-1 rounded-lg bg-white shadow-sm font-semibold text-slate-800 transition">Desktop</button>
-                <button type="button" id="btnPreviewTablet" onclick="setPreviewWidth('tablet')" class="px-3 py-1 rounded-lg text-slate-500 hover:text-slate-800 transition">Tablet</button>
+            <div class="pv-viewport" id="pvViewport">
+                <div class="pv-stage" id="pvStage"></div>
             </div>
-        </div>
-
-        <!-- Janela de Visualização Mockup -->
-        <div id="previewMockupWrapper" class="w-full transition-all duration-300 flex justify-center">
-            <?php 
-                $activeBg = !empty($section['video_path']) ? $section['video_path'] : ($styleValues['bg_image'] ?? '');
-                $initialIsVideo = preg_match('/\.(mp4|webm|ogg)$/i', $activeBg);
-                $initialVideoUrl = $initialIsVideo ? SITE_URL . '/' . ltrim($activeBg, '/') : '';
-                $initialImgUrl = (!$initialIsVideo && !empty($activeBg)) ? SITE_URL . '/' . ltrim($activeBg, '/') : '';
-            ?>
-            <div id="previewMockupCard" class="w-full bg-slate-900 rounded-b-3xl border border-slate-200 overflow-hidden relative shadow-lg min-h-[460px] flex flex-col justify-between text-white p-6 transition-all duration-300" style="background-image: <?= $initialImgUrl ? "linear-gradient(rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.8)), url('{$initialImgUrl}')" : 'none' ?>; background-size: cover; background-position: center;">
-                
-                <!-- Vídeo de fundo em tempo real -->
-                <video id="previewVideoBg" autoplay muted loop playsinline class="absolute inset-0 w-full h-full object-cover pointer-events-none <?= !$initialIsVideo ? 'hidden' : '' ?>" style="z-index: 0;">
-                    <source src="<?= e($initialVideoUrl) ?>" type="video/mp4">
-                </video>
-                <div id="previewVideoOverlay" class="absolute inset-0 bg-slate-950/60 pointer-events-none <?= !$initialIsVideo ? 'hidden' : '' ?>" style="z-index: 1;"></div>
-
-                <!-- Navbar Mockup Interna -->
-                <div class="relative flex items-center justify-between border-b border-white/10 pb-4" style="z-index: 2;">
-                    <span class="font-bold text-sm tracking-tight text-white">Tunísia CMS</span>
-                    <span class="text-[10px] bg-indigo-500/30 border border-indigo-400/30 text-indigo-200 px-2.5 py-0.5 rounded-full font-medium">Seção: #<?= e($section['identifier']) ?></span>
-                </div>
-
-                <!-- Conteúdo Central Vivo da Seção Aberta -->
-                <?php if (($section['identifier'] ?? '') === 'mapa'): ?>
-                <div id="mapPreview" class="relative my-auto py-6" style="z-index:2;color:#111827">
-                    <div style="text-align:center;margin-bottom:22px">
-                        <span id="liveBadge" style="display:inline-block;font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#ff2d2d"><?= e($section['badge'] ?? 'EXPLORE A TUNÍSIA') ?></span>
-                        <h3 id="liveTitle" style="font-size:27px;line-height:1.15;font-weight:800;margin:10px 0;color:#111827"><?= e($section['title'] ?: 'Mapa Interativo') ?></h3>
-                        <p id="liveSubtitle" style="font-size:11px;margin:0 0 10px;color:#4b5563"><?= e($section['subtitle'] ?? '') ?></p>
-                        <p id="liveDescription" style="max-width:390px;margin:auto;font-size:12px;line-height:1.55;color:#64748b"><?= e($section['description'] ?? '') ?></p>
-                    </div>
-                    <div id="mapPreviewGrid" style="display:grid;grid-template-columns:minmax(0,2fr) minmax(150px,1fr);gap:18px;align-items:start">
-                        <div id="mapPreviewBox" style="position:relative;aspect-ratio:16/10;background:#f1f5f9;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;padding:16px">
-                            <img id="liveContentImage" src="<?= !empty($section['image_path']) ? e(SITE_URL . '/' . ltrim((string)$section['image_path'], '/')) : '' ?>" alt="Mapa" style="width:100%;height:100%;object-fit:contain">
-                            <?php foreach ($sectionItems as $item): if (($item['item_type'] ?? '') !== 'map_marker') continue; $coords = explode(',', (string)($item['link_url'] ?? '40%,50%')); ?>
-                                <i class="map-preview-marker" style="position:absolute;top:<?= e(trim($coords[0] ?? '40%')) ?>;left:<?= e(trim($coords[1] ?? '50%')) ?>;width:12px;height:12px;border:2px solid #fff;border-radius:50%;background:#ff2d2d;transform:translate(-50%,-50%);box-shadow:0 0 0 4px rgba(255,45,45,.2)"></i>
-                            <?php endforeach; ?>
-                        </div>
-                        <div id="mapPreviewInfo" style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:15px;box-shadow:0 8px 18px rgba(15,23,42,.08)">
-                            <div style="display:flex;gap:8px;align-items:center;margin-bottom:11px"><b id="mapPreviewIcon" style="display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:#ff2d2d;color:#fff">🌍</b><div><strong style="font-size:12px">Informações Gerais</strong><br><span style="font-size:10px;color:#64748b">República da Tunísia</span></div></div>
-                            <div class="map-preview-row"><span>👥 População</span><b>12,3 mi</b></div><div class="map-preview-row"><span>🗣️ Idioma</span><b>Árabe</b></div><div class="map-preview-row"><span>💲 Moeda</span><b>Dinar</b></div><div class="map-preview-row"><span>🌍 Continente</span><b>África</b></div><div id="mapPreviewCode" style="text-align:center;margin-top:12px;font-size:25px;font-weight:800;color:#e2e8f0">TN</div>
-                        </div>
-                    </div>
-                </div>
-                <style>#mapPreviewInfo .map-preview-row{display:flex;justify-content:space-between;gap:6px;padding:8px 0;border-bottom:1px solid #e5e7eb;font-size:9px}#mapPreviewInfo .map-preview-row span{color:#64748b}#mapPreviewInfo .map-preview-row b{font-size:9px}</style>
-                <?php elseif (($section['identifier'] ?? '') === 'cultura'): ?>
-                <div id="culturalPreview" class="relative my-auto py-6" style="z-index:2;color:#111827;width:100%">
-                    <div style="text-align:center;margin-bottom:24px">
-                        <span id="liveBadge" style="display:inline-block;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#ff2d2d"><?= e($section['badge'] ?? 'SEMANA CULTURAL') ?></span>
-                        <h2 id="liveTitle" style="font-size:28px;font-weight:800;margin:10px 0;color:#111827;line-height:1.2"><?= e($section['title'] ?: 'Celebrando a Tunísia') ?></h2>
-                        <p id="liveSubtitle" style="font-size:13px;margin:6px auto 0;color:#4b5563;max-width:500px"><?= e($section['subtitle'] ?? '') ?></p>
-                        <p id="liveDescription" style="font-size:12px;margin:8px auto 0;color:#64748b;max-width:560px;line-height:1.6"><?= e($section['description'] ?? '') ?></p>
-                    </div>
-
-                    <div id="culturalPreviewGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;width:100%">
-                        <?php 
-                        $culturalCards = array_filter($sectionItems, fn($i) => ($i['item_type'] ?? '') === 'cultural_card');
-                        if (empty($culturalCards)) {
-                            // Se ainda não houver itens carregados, busca os padrões de cultura
-                            $culturalCards = [
-                                ['title' => 'Gastronomia', 'description' => 'Cuscuz, tajine, brik e doces tradicionais', 'subtitle' => 'Degustação de pratos típicos tunisianos', 'icon' => '🍴', 'image_path' => 'assets/img/img01.png'],
-                                ['title' => 'Música', 'description' => 'Apresentação de músicas e danças tradicionais', 'subtitle' => 'Ritmos mediterrâneos e instrumentos árabes', 'icon' => '🎵', 'image_path' => 'assets/img/img02.png'],
-                                ['title' => 'História', 'description' => 'Exposição sobre a rica história tunisiana', 'subtitle' => 'De Cartago aos dias atuais', 'icon' => '📖', 'image_path' => 'assets/img/img03.png']
-                            ];
-                        }
-                        foreach ($culturalCards as $cIdx => $cItem): 
-                            $cImg = !empty($cItem['image_path']) ? SITE_URL . '/' . ltrim((string)$cItem['image_path'], '/') : '';
-                        ?>
-                        <div class="cultural-preview-card" data-cultural-index="<?= $cIdx ?>" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;box-shadow:0 4px 14px rgba(15,23,42,.06);display:flex;flex-direction:column;transition:transform .3s ease">
-                            <div style="position:relative;height:120px;background:#f1f5f9;overflow:visible">
-                                <img class="cultural-preview-img" src="<?= e($cImg) ?>" alt="<?= e($cItem['title'] ?? '') ?>" style="width:100%;height:100%;object-fit:cover;display:<?= $cImg ? 'block' : 'none' ?>">
-                                <div class="cultural-preview-icon" style="position:absolute;bottom:-14px;left:14px;width:34px;height:34px;background:#ffffff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 4px 12px rgba(0,0,0,.12);border:1px solid rgba(0,0,0,.04);z-index:2">
-                                    <?= e($cItem['icon'] ?? '✨') ?>
-                                </div>
-                            </div>
-                            <div style="padding:22px 14px 16px;display:flex;flex-direction:column;flex:1">
-                                <h3 class="cultural-preview-title" style="font-size:15px;font-weight:700;margin:0 0 6px;color:#111827"><?= e($cItem['title'] ?? '') ?></h3>
-                                <p class="cultural-preview-desc" style="font-size:11px;color:#4b5563;margin:0 0 10px;line-height:1.5;flex:1"><?= e($cItem['description'] ?? '') ?></p>
-                                <span class="cultural-preview-sub" style="font-size:10px;color:#111827;font-weight:600"><?= e($cItem['subtitle'] ?? '') ?></span>
-                            </div>
-                        </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-                <?php else: ?>
-                <div id="liveContentLayout" class="relative my-auto py-8 flex flex-col gap-5" style="z-index: 2;">
-                    <img id="liveContentImage" src="<?= !empty($section['image_path']) ? e(SITE_URL . '/' . ltrim((string)$section['image_path'], '/')) : '' ?>" alt="" class="hidden w-full max-h-52 object-cover rounded-xl">
-                    <div id="liveContentCopy">
-                    <div class="mb-2">
-                        <span id="liveBadge" class="text-[10px] font-bold uppercase tracking-wider text-amber-300 bg-amber-400/20 px-2 py-0.5 rounded">
-                            <?= e($section['badge'] ?? 'Seção') ?>
-                        </span>
-                    </div>
-                    <h3 id="liveTitle" class="text-xl md:text-2xl font-bold leading-tight text-white mb-3">
-                        <?= e($section['title'] ?: 'Título da Seção') ?>
-                    </h3>
-                    <p id="liveSubtitle" class="text-xs text-white/80 leading-relaxed max-w-sm">
-                        <?= e($section['subtitle'] ?? $section['description'] ?? 'Descrição ou subtítulo da seção exibido aqui...') ?>
-                    </p>
-                    <div class="flex items-center gap-2 mt-5">
-                        <span id="liveBtn1" class="px-3 py-1 bg-indigo-600 text-white rounded text-[10px] font-semibold <?= empty($section['primary_btn_text']) ? 'hidden' : '' ?>"><?= e($section['primary_btn_text']) ?></span>
-                        <span id="liveBtn2" class="px-3 py-1 bg-white/20 text-white rounded text-[10px] <?= empty($section['secondary_btn_text']) ? 'hidden' : '' ?>"><?= e($section['secondary_btn_text']) ?></span>
-                    </div>
-                    </div>
-                </div>
-                <?php endif; ?>
-
-                <!-- Rodapé Mockup -->
-                <div class="relative text-[10px] text-white/50 border-t border-white/10 pt-3 flex justify-between items-center" style="z-index: 2;">
-                    <span>Pré-visualização ao vivo</span>
-                    <span>Modo de Edição</span>
-                </div>
+            <div class="pv-foot">
+                <span id="pvStatus" role="status" aria-live="polite" class="is-busy">Carregando preview…</span>
+                <span>Mesmo HTML e CSS do site público</span>
             </div>
         </div>
-        
     </div>
 </form>
 
@@ -1107,20 +1129,10 @@ require_once __DIR__ . '/../includes/admin_header.php';
     const panel = document.getElementById('sxPanel');
     if (!panel) return;
 
-    const FONTS = <?= json_encode(array_map(fn($f) => ['stack' => $f['stack'], 'google' => $f['google']], SX_FONTS), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) ?>;
     const FIELDS = <?= json_encode(array_keys(sectionStyleDefaults())) ?>;
     const DEFAULTS = <?= json_encode(sectionStyleDefaults()) ?>;
-    const BASE = <?= json_encode((string)SITE_URL, JSON_UNESCAPED_SLASHES) ?>;
-
-    const DIRS = { down: 'to bottom', right: 'to right', diag: 'to bottom right', up: 'to top' };
-    const TITLE_PX = { sm: 20, md: 26, lg: 32, xl: 40, '2xl': 50 };
-    const BODY_PX = { sm: 11, md: 12, lg: 14, xl: 16 };
-    const SPACING = { tight: '-0.04em', normal: '0', wide: '0.08em' };
-    const T_LEAD = { tight: '1.05', normal: '1.25', relaxed: '1.5' };
-    const B_LEAD = { tight: '1.4', normal: '1.7', relaxed: '2.05' };
-    const BTN_R = { sq: '4px', md: '10px', pill: '999px' };
     // Paleta do site principal (assets/css/style.css), disponível em todos os campos de cor.
-    const PALETTE = ['#ff2d2d', '#e02424', '#111827', '#64748b', '#4b5563', '#ffffff', '#e5e7eb', '#fafafa', '#f3f4f6', '#f1f5f9', '#e2e8f0', '#94a3b8', '#cbd5e1'];
+    const PALETTE = ['#ff2d2d', '#e02424', '#111827', '#64748b', '#4b5563', '#ffffff', '#e5e7eb', '#fafafa', '#f3f4f6', '#f1f5f9', '#e2e8f0', '#94a3b8', '#cbd5e1', '#0f172a', '#ffe5e5'];
 
     const PRESETS = {
         clean:     { text_align: 'center', bg_mode: 'solid', bg_color: '#ffffff', title_color: '#0f172a', body_color: '#475569', accent_color: '#4f46e5', title_weight: '800', title_decor: 'line' },
@@ -1133,24 +1145,7 @@ require_once __DIR__ . '/../includes/admin_header.php';
         sunset:    { bg_mode: 'gradient', bg_color: '#c2410c', bg_color2: '#be185d', bg_direction: 'diag', title_color: '#ffffff', body_color: '#fff7ed', accent_color: '#fde047', title_decor: 'dots', animation: 'fade-up', btn_radius: 'pill' }
     };
 
-    const card = document.getElementById('previewMockupCard');
-    const liveTitle = document.getElementById('liveTitle');
-    const liveSub = document.getElementById('liveSubtitle');
-    const liveBadge = document.getElementById('liveBadge');
-    const liveBtn1 = document.getElementById('liveBtn1');
-    const liveBtn2 = document.getElementById('liveBtn2');
     const contrastBox = document.getElementById('sxContrast');
-    const liveContentLayout = document.getElementById('liveContentLayout');
-    const liveContentCopy = document.getElementById('liveContentCopy');
-    const liveContentImage = document.getElementById('liveContentImage');
-
-    let liveDecor = null;
-    if (liveTitle) {
-        liveDecor = document.createElement('div');
-        liveDecor.id = 'liveDecor';
-        liveDecor.style.display = 'none';
-        liveTitle.insertAdjacentElement('afterend', liveDecor);
-    }
 
     function els(n) { return panel.querySelectorAll('[name="sx[' + n + ']"]'); }
     function val(n) {
@@ -1220,17 +1215,6 @@ require_once __DIR__ . '/../includes/admin_header.php';
         });
     });
 
-    const loaded = {};
-    function ensureFont(key) {
-        const f = FONTS[key];
-        if (!f || !f.google || loaded[key]) return;
-        loaded[key] = true;
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = 'https://fonts.googleapis.com/css2?family=' + f.google + '&display=swap';
-        document.head.appendChild(link);
-    }
-
     function lum(hex) {
         const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
         if (!m) return null;
@@ -1260,9 +1244,11 @@ require_once __DIR__ . '/../includes/admin_header.php';
             const worst = (c) => Math.min.apply(null, bgs.map(b => ratio(c, b)).filter(r => r !== null));
             const problems = [];
             if (title) { const r = worst(title); if (isFinite(r) && r < 3) problems.push('título (' + r.toFixed(1) + ':1)'); }
+            if (subtitle) { const r = worst(subtitle); if (isFinite(r) && r < 4.5) problems.push('subtítulo (' + r.toFixed(1) + ':1)'); }
+            if (description) { const r = worst(description); if (isFinite(r) && r < 4.5) problems.push('descrição (' + r.toFixed(1) + ':1)'); }
             if (body)  { const r = worst(body);  if (isFinite(r) && r < 4.5) problems.push('texto (' + r.toFixed(1) + ':1)'); }
             if (problems.length) {
-                if (contrastBox) { contrastBox.className = 'warn'; contrastBox.textContent = '⚠ Contraste baixo em: ' + problems.join(' e '); }
+                if (contrastBox) { contrastBox.className = 'warn'; contrastBox.textContent = '⚠ Contraste baixo em: ' + problems.join(', '); }
             } else {
                 if (contrastBox) { contrastBox.className = 'ok'; contrastBox.textContent = '✓ Bom contraste entre texto e fundo.'; }
             }
@@ -1287,187 +1273,11 @@ require_once __DIR__ . '/../includes/admin_header.php';
         }
     }
 
-    function updatePreview() {
-        try {
-            if (!card) return;
-            card.style.textAlign = val('text_align');
-
-            const mode = val('bg_mode'), c1 = val('bg_color'), c2 = val('bg_color2') || c1, img = val('bg_image');
-            const videoBg = document.getElementById('previewVideoBg');
-            const videoOverlay = document.getElementById('previewVideoOverlay');
-
-            const layers = [];
-            const isVideoFile = /\.(mp4|webm|ogg)$/i.test(img);
-
-            if (img && isVideoFile) {
-                const fullVideoUrl = /^(https?:)?\/\//.test(img) ? img : BASE + '/' + img.replace(/^\/+/, '');
-                if (videoBg && videoOverlay) {
-                    videoBg.src = fullVideoUrl;
-                    videoBg.classList.remove('hidden');
-                    videoOverlay.classList.remove('hidden');
-                    videoBg.load();
-                    videoBg.play().catch(e => console.log("Autoplay bloqueado:", e));
-                }
-            } else {
-                if (videoBg && videoOverlay) {
-                    videoBg.pause();
-                    videoBg.src = '';
-                    videoBg.classList.add('hidden');
-                    videoOverlay.classList.add('hidden');
-                }
-
-                if (img) {
-                    const a = (parseInt(val('bg_overlay') || '0', 10) || 0) / 100;
-                    if (a > 0) layers.push('linear-gradient(rgba(0,0,0,' + a + '),rgba(0,0,0,' + a + '))');
-                    
-                    const fullImgUrl = /^(https?:)?\/\//.test(img) ? img : BASE + '/' + img.replace(/^\/+/, '');
-                    layers.push("url('" + fullImgUrl + "')");
-                }
-            }
-
-            if (mode === 'solid' && c1) layers.push(c1);
-            else if (mode === 'gradient' && c1) layers.push('linear-gradient(' + (DIRS[val('bg_direction')] || 'to bottom') + ',' + c1 + ',' + c2 + ')');
-            
-            // Sem personalização, o preview reproduz o fundo claro do site principal.
-            card.style.background = layers.join(',') || '#ffffff';
-            card.style.backgroundSize = img && !isVideoFile ? 'cover' : '';
-            card.style.backgroundPosition = img && !isVideoFile ? 'center' : '';
-
-            const tf = val('title_font'), bf = val('body_font');
-            if (tf) ensureFont(tf);
-            if (bf) ensureFont(bf);
-            const accent = val('accent_color');
-            if (accent) {
-                const liveBadgeEl = document.getElementById('liveBadge');
-                if (liveBadgeEl) liveBadgeEl.style.color = accent;
-            }
-
-            const culturalPreview = document.getElementById('culturalPreview');
-            if (culturalPreview) {
-                const cCards = culturalPreview.querySelectorAll('.cultural-preview-card');
-                const cardBg = val('card_bg') || '#ffffff';
-                const cardText = val('card_text') || '#111827';
-                const cardBorder = val('card_border_color') || '#e5e7eb';
-                const cardStyle = val('card_style');
-                const cardRadius = val('card_radius');
-                const cardShadow = val('card_shadow');
-                const cardHover = val('card_hover');
-                const cardBorderWidth = val('card_border_width');
-
-                const radMap = { sq: '4px', md: '16px', lg: '24px', xl: '32px' };
-                const borderWMap = { none: '0px', thin: '1px', medium: '2px', thick: '4px' };
-                const shadowMap = {
-                    none: 'none',
-                    soft: '0 4px 14px rgba(15,23,42,.06)',
-                    medium: '0 10px 24px rgba(15,23,42,.12)',
-                    strong: '0 20px 38px rgba(15,23,42,.22)'
-                };
-
-                cCards.forEach(cCard => {
-                    cCard.style.background = cardStyle === 'glass' ? 'rgba(255,255,255,0.7)' : cardBg;
-                    if (cardRadius && radMap[cardRadius]) cCard.style.borderRadius = radMap[cardRadius];
-                    if (cardBorderWidth && borderWMap[cardBorderWidth]) cCard.style.borderWidth = borderWMap[cardBorderWidth];
-                    cCard.style.borderColor = cardStyle === 'accent' ? (accent || '#ff2d2d') : (cardStyle === 'flat' ? 'transparent' : cardBorder);
-                    cCard.style.boxShadow = cardStyle === 'flat' ? 'none' : (shadowMap[cardShadow] || shadowMap.soft);
-
-                    const titleEl = cCard.querySelector('.cultural-preview-title');
-                    const descEl = cCard.querySelector('.cultural-preview-desc');
-                    const subEl = cCard.querySelector('.cultural-preview-sub');
-                    const iconEl = cCard.querySelector('.cultural-preview-icon');
-
-                    if (titleEl) titleEl.style.color = cardText;
-                    if (descEl) descEl.style.color = val('body_color') || '#4b5563';
-                    if (subEl) subEl.style.color = accent || '#ff2d2d';
-                    if (iconEl && accent && cardStyle === 'accent') {
-                        iconEl.style.borderColor = accent;
-                    }
-                });
-            }
-
-            if (liveTitle) {
-                const size = TITLE_PX[val('title_size')];
-                liveTitle.style.fontFamily = (tf && tf !== 'sans' && FONTS[tf]) ? FONTS[tf].stack : '';
-                liveTitle.style.fontSize = size ? size + 'px' : '';
-                liveTitle.style.lineHeight = T_LEAD[val('title_leading')] || ((size || tf) ? '1.15' : '');
-                liveTitle.style.fontWeight = val('title_weight');
-                liveTitle.style.textTransform = val('title_transform');
-                liveTitle.style.fontStyle = val('title_style');
-                liveTitle.style.letterSpacing = SPACING[val('title_spacing')] || '';
-                const effect = val('title_effect');
-                liveTitle.style.textShadow = effect === 'shadow' ? '0 6px 28px rgba(0,0,0,.45)' : '';
-                if (effect === 'gradient') {
-                    liveTitle.style.backgroundImage = 'linear-gradient(90deg,' + (accent || '#e11d48') + ',' + (val('title_color') || '#6366f1') + ')';
-                    liveTitle.style.webkitBackgroundClip = 'text';
-                    liveTitle.style.backgroundClip = 'text';
-                    liveTitle.style.webkitTextFillColor = 'transparent';
-                    liveTitle.style.color = 'transparent';
-                } else {
-                    liveTitle.style.backgroundImage = '';
-                    liveTitle.style.webkitBackgroundClip = '';
-                    liveTitle.style.backgroundClip = '';
-                    liveTitle.style.webkitTextFillColor = '';
-                    liveTitle.style.color = val('title_color') || '#111827';
-                }
-            }
-            if (liveDecor) {
-                const d = val('title_decor'), al = val('text_align');
-                liveDecor.style.display = d ? 'block' : 'none';
-                liveDecor.style.marginTop = '2px'; liveDecor.style.marginBottom = '12px';
-                liveDecor.style.marginLeft = (al === 'center') ? 'auto' : (al === 'right' ? 'auto' : '0');
-                liveDecor.style.marginRight = (al === 'center') ? 'auto' : (al === 'right' ? '0' : 'auto');
-                const col = accent || '#e11d48';
-                liveDecor.style.height = d === 'bar' ? '5px' : (d === 'dots' ? '8px' : '3px');
-                liveDecor.style.width = d === 'bar' ? '110px' : (d === 'dots' ? '48px' : '52px');
-                liveDecor.style.borderRadius = '4px';
-                liveDecor.style.background = d === 'dots'
-                    ? 'radial-gradient(circle,' + col + ' 3px,transparent 3.5px) 0 0/16px 8px repeat-x'
-                    : (d === 'bar' ? 'linear-gradient(90deg,' + col + ',' + (val('title_color') || '#6366f1') + ')' : col);
-            }
-            if (liveSub) {
-                liveSub.style.fontFamily = (bf && bf !== 'sans' && FONTS[bf]) ? FONTS[bf].stack : '';
-                liveSub.style.fontSize = BODY_PX[val('body_size')] ? BODY_PX[val('body_size')] + 'px' : '';
-                liveSub.style.lineHeight = B_LEAD[val('body_leading')] || '';
-                liveSub.style.color = val('subtitle_color') || val('description_color') || val('body_color') || '#64748b';
-                const al = val('text_align');
-                liveSub.style.marginLeft = (al === 'center' || al === 'right') ? 'auto' : '';
-                liveSub.style.marginRight = (al === 'center') ? 'auto' : '';
-            }
-            if (liveBadge) {
-                liveBadge.style.color = accent || '#ff2d2d';
-                liveBadge.style.display = val('hide_badge') === '1' ? 'none' : '';
-            }
-            [liveBtn1, liveBtn2].forEach(b => { if (b) b.style.borderRadius = BTN_R[val('btn_radius')] || ''; });
-            if (liveBtn1) liveBtn1.style.background = accent || '#ff2d2d';
-            if (liveTitle) liveTitle.style.display = val('hide_title') === '1' ? 'none' : '';
-            if (liveSub) liveSub.style.display = val('hide_description') === '1' ? 'none' : '';
-            if (liveBtn1) liveBtn1.parentElement.style.display = val('hide_buttons') === '1' ? 'none' : '';
-            if (liveContentLayout && liveContentImage && liveContentCopy) {
-                const chosen = panel.querySelector('input[name="image_path"]:checked');
-                const path = chosen ? chosen.value : '';
-                const layout = val('content_layout');
-                const showImage = !!path && layout !== 'text' && val('hide_media') !== '1';
-                liveContentImage.classList.toggle('hidden', !showImage);
-                if (showImage) liveContentImage.src = BASE + '/' + path.replace(/^\/+/, '');
-                liveContentLayout.style.display = (layout === 'image-left' || layout === 'image-right') ? 'flex' : 'flex';
-                liveContentLayout.style.flexDirection = layout === 'image-right' ? 'row-reverse' : (layout === 'image-left' ? 'row' : (layout === 'image-bottom' ? 'column-reverse' : 'column'));
-                liveContentLayout.style.alignItems = val('content_vertical') === 'start' ? 'flex-start' : (val('content_vertical') === 'end' ? 'flex-end' : 'center');
-                liveContentLayout.style.gap = ({sm:'12px',md:'22px',lg:'36px'})[val('content_gap')] || '20px';
-                liveContentImage.style.width = (layout === 'image-left' || layout === 'image-right') ? ({sm:'30%',md:'42%',lg:'56%'})[val('media_width')] || '42%' : '100%';
-                liveContentImage.style.aspectRatio = ({square:'1',landscape:'4 / 3',portrait:'3 / 4',wide:'16 / 7'})[val('media_ratio')] || '';
-                liveContentImage.style.objectFit = val('media_fit') || 'cover';
-                liveContentImage.style.borderRadius = ({none:'0',md:'12px',lg:'24px',pill:'999px'})[val('media_radius')] || '12px';
-                liveContentCopy.style.flex = '1 1 0';
-            }
-        } catch (err) {
-            console.error("Erro em updatePreview:", err);
-        }
-    }
-
     function refresh() {
         try {
             updateVisibility();
-            updatePreview();
             updateContrast();
+            if (window.sxPreviewQueue) window.sxPreviewQueue();
         } catch (err) {
             console.error("Erro em refresh:", err);
         }
@@ -1539,18 +1349,6 @@ require_once __DIR__ . '/../includes/admin_header.php';
 
 <script>
     const inputTitle = document.getElementById('inputTitle');
-    const inputSubtitle = document.getElementById('inputSubtitle');
-    const inputDescription = document.getElementById('inputDescription');
-    const inputBadge = document.getElementById('inputBadge');
-    const inputBtn1 = document.getElementById('inputBtn1Text');
-    const inputBtn2 = document.getElementById('inputBtn2Text');
-
-    const liveTitle = document.getElementById('liveTitle');
-    const liveSubtitle = document.getElementById('liveSubtitle');
-    const liveDescription = document.getElementById('liveDescription');
-    const liveBadge = document.getElementById('liveBadge');
-    const liveBtn1 = document.getElementById('liveBtn1');
-    const liveBtn2 = document.getElementById('liveBtn2');
     const headerTitle = document.getElementById('headerTitle');
 
     (function () {
@@ -1737,9 +1535,9 @@ require_once __DIR__ . '/../includes/admin_header.php';
                 complete.classList.toggle('ready', ready);
             }
 
-            select.addEventListener('change', () => { applyType(); syncCulturalPreview(); });
-            titleInput.addEventListener('input', () => { refreshSummary(); updateStatus(); syncCulturalPreview(); });
-            Object.keys(inputs).forEach(k => { if (k !== 'type') inputs[k].addEventListener('input', () => { refreshSummary(); updateStatus(); syncCulturalPreview(); }); });
+            select.addEventListener('change', () => { applyType();  });
+            titleInput.addEventListener('input', () => { refreshSummary(); updateStatus();  });
+            Object.keys(inputs).forEach(k => { if (k !== 'type') inputs[k].addEventListener('input', () => { refreshSummary(); updateStatus();  }); });
 
             function setOpen(open) {
                 row.classList.toggle('is-open', open);
@@ -1827,56 +1625,6 @@ require_once __DIR__ . '/../includes/admin_header.php';
             pill('Tipos:', String(types), '');
         }
 
-        function syncCulturalPreview() {
-            const culturalGrid = document.getElementById('culturalPreviewGrid');
-            if (!culturalGrid) return;
-            const cRows = rows().filter(r => r.dataset.type === 'cultural_card');
-            culturalGrid.replaceChildren();
-            cRows.forEach((r, idx) => {
-                const getVal = name => {
-                    const el = r.querySelector('[name="' + name + '"]');
-                    return el ? el.value.trim() : '';
-                };
-                const title = getVal('item_title[]') || 'Item ' + (idx + 1);
-                const desc = getVal('item_description[]');
-                const sub = getVal('item_subtitle[]');
-                const icon = getVal('item_icon[]') || '✨';
-                const img = getVal('item_image_path[]');
-                const fullImg = img ? (/^(https?:)?\/\//.test(img) ? img : BASE + '/' + img.replace(/^\/+/, '')) : '';
-
-                const cardEl = el('div', {
-                    class: 'cultural-preview-card',
-                    'data-cultural-index': String(idx),
-                    style: 'background:#ffffff;border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;box-shadow:0 4px 14px rgba(15,23,42,.06);display:flex;flex-direction:column;transition:transform .3s ease'
-                });
-
-                const mediaBox = el('div', { style: 'position:relative;height:120px;background:#f1f5f9;overflow:visible' });
-                const imgEl = el('img', {
-                    class: 'cultural-preview-img',
-                    src: fullImg,
-                    alt: title,
-                    style: 'width:100%;height:100%;object-fit:cover;' + (fullImg ? 'display:block;' : 'display:none;')
-                });
-                const iconEl = el('div', {
-                    class: 'cultural-preview-icon',
-                    style: 'position:absolute;bottom:-14px;left:14px;width:34px;height:34px;background:#ffffff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 4px 12px rgba(0,0,0,.12);border:1px solid rgba(0,0,0,.04);z-index:2'
-                }, icon);
-
-                mediaBox.append(imgEl, iconEl);
-
-                const bodyBox = el('div', { style: 'padding:22px 14px 16px;display:flex;flex-direction:column;flex:1' });
-                const h3 = el('h3', { class: 'cultural-preview-title', style: 'font-size:15px;font-weight:700;margin:0 0 6px;color:#111827' }, title);
-                const p = el('p', { class: 'cultural-preview-desc', style: 'font-size:11px;color:#4b5563;margin:0 0 10px;line-height:1.5;flex:1' }, desc);
-                const span = el('span', { class: 'cultural-preview-sub', style: 'font-size:10px;color:#111827;font-weight:600' }, sub);
-
-                bodyBox.append(h3, p, span);
-                cardEl.append(mediaBox, bodyBox);
-                culturalGrid.appendChild(cardEl);
-            });
-            // Re-aplica estilos visuais caso a seção de aparência tenha sido configurada
-            if (typeof window.triggerSxUpdate === 'function') window.triggerSxUpdate();
-        }
-
         function refresh() {
             rows().forEach(r => { r.hidden = !(activeFilter === 'all' || r.dataset.type === activeFilter); });
             renderFilters();
@@ -1890,7 +1638,7 @@ require_once __DIR__ . '/../includes/admin_header.php';
             if (emptyEl) emptyEl.hidden = rows().length > 0;
             updateStatus();
             updateToggleAll();
-            syncCulturalPreview();
+            if (window.sxPreviewQueue) window.sxPreviewQueue();
         }
 
         if (list) {
@@ -1926,120 +1674,147 @@ require_once __DIR__ . '/../includes/admin_header.php';
         }
     })();
 
-    if (inputTitle && liveTitle) {
+    if (inputTitle && headerTitle) {
         inputTitle.addEventListener('input', () => {
-            const val = inputTitle.value.trim() || 'Título da Seção';
-            liveTitle.textContent = val;
-            if (headerTitle) headerTitle.textContent = val;
+            headerTitle.textContent = inputTitle.value.trim() || 'Título da Seção';
         });
     }
 
-    if (inputSubtitle && liveSubtitle) {
-        inputSubtitle.addEventListener('input', () => {
-            liveSubtitle.textContent = inputSubtitle.value.trim() || 'Subtítulo / Descrição da seção...';
-        });
-    }
-
-    if (inputDescription && liveDescription) {
-        inputDescription.addEventListener('input', () => {
-            liveDescription.textContent = inputDescription.value.trim() || 'Descrição da seção...';
-        });
-    }
-
-    if (inputBadge && liveBadge) {
-        inputBadge.addEventListener('input', () => {
-            liveBadge.textContent = inputBadge.value.trim() || 'Seção';
-        });
-    }
-
-    if (inputBtn1 && liveBtn1) {
-        inputBtn1.addEventListener('input', () => {
-            const val = inputBtn1.value.trim();
-            liveBtn1.textContent = val;
-            liveBtn1.classList.toggle('hidden', val === '');
-        });
-    }
-
-    if (inputBtn2 && liveBtn2) {
-        inputBtn2.addEventListener('input', () => {
-            const val = inputBtn2.value.trim();
-            liveBtn2.textContent = val;
-            liveBtn2.classList.toggle('hidden', val === '');
-        });
-    }
-
-    function applyMediaPreview(type, source) {
-        const videoBg = document.getElementById('previewVideoBg');
-        const videoOverlay = document.getElementById('previewVideoOverlay');
-        const cardEl = document.getElementById('previewMockupCard');
-
-        if (type === 'video') {
-            const cleanPath = source.trim();
-            if (cleanPath !== '') {
-                const fullUrl = /^(https?:)?\/\//.test(cleanPath) ? cleanPath : BASE + '/' + cleanPath.replace(/^\/+/, '');
-                if (videoBg && videoOverlay) {
-                    videoBg.src = fullUrl;
-                    videoBg.classList.remove('hidden');
-                    videoOverlay.classList.remove('hidden');
-                    videoBg.load();
-                    videoBg.play().catch(e => console.log("Autoplay bloqueado:", e));
-                }
-            } else {
-                clearSectionMedia();
-            }
-        } else if (type === 'image') {
-            if (videoBg && videoOverlay) {
-                videoBg.pause();
-                videoBg.src = '';
-                videoBg.classList.add('hidden');
-                videoOverlay.classList.add('hidden');
-            }
-            if (cardEl) {
-                cardEl.style.backgroundImage = `linear-gradient(rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.8)), url('${source}')`;
-            }
-        }
-    }
-
-    function previewSelectedVideo(videoPath) {
-        applyMediaPreview('video', videoPath);
-    }
-
+    // Botão "remover vídeo" (se existir) — o preview acompanha sozinho.
     function clearSectionMedia() {
         const videoInput = document.getElementById('inputVideo');
         if (videoInput) videoInput.value = '';
-
-        const videoBg = document.getElementById('previewVideoBg');
-        const videoOverlay = document.getElementById('previewVideoOverlay');
-        const cardEl = document.getElementById('previewMockupCard');
-
-        if (videoBg && videoOverlay) {
-            videoBg.pause();
-            videoBg.src = '';
-            videoBg.classList.add('hidden');
-            videoOverlay.classList.add('hidden');
-        }
-        if (cardEl) {
-            cardEl.style.backgroundImage = 'none';
-        }
-    }
-
-    function setPreviewWidth(mode) {
-        const card = document.getElementById('previewMockupCard');
-        const btnDesktop = document.getElementById('btnPreviewDesktop');
-        const btnTablet = document.getElementById('btnPreviewTablet');
-
-        if (!card || !btnDesktop || !btnTablet) return;
-
-        if (mode === 'tablet') {
-            card.style.maxWidth = '360px';
-            btnTablet.className = 'px-3 py-1 rounded-lg bg-white shadow-sm font-semibold text-slate-800 transition';
-            btnDesktop.className = 'px-3 py-1 rounded-lg text-slate-500 hover:text-slate-800 transition';
-        } else {
-            card.style.maxWidth = '100%';
-            btnDesktop.className = 'px-3 py-1 rounded-lg bg-white shadow-sm font-semibold text-slate-800 transition';
-            btnTablet.className = 'px-3 py-1 rounded-lg text-slate-500 hover:text-slate-800 transition';
-        }
+        if (window.sxPreviewQueue) window.sxPreviewQueue();
     }
 </script>
+
+<script>
+// Preview fiel: pede ao servidor o HTML real do site com os dados do formulário e mostra só a seção em edição.
+(function () {
+    const form = document.getElementById('editorForm');
+    const viewport = document.getElementById('pvViewport');
+    const stage = document.getElementById('pvStage');
+    const column = document.getElementById('pvColumn');
+    const statusEl = document.getElementById('pvStatus');
+    if (!form || !viewport || !stage) return;
+
+    const URL_PREVIEW = <?= json_encode(ADMIN_URL . '/section_preview.php', JSON_UNESCAPED_SLASHES) ?>;
+    const SECTION_ID = <?= (int)$sectionId ?>;
+    const WIDTH = { desktop: 1280, tablet: 820, mobile: 390 };   // largura simulada da tela
+    const SCREEN_H = { desktop: 720, tablet: 1024, mobile: 800 }; // altura simulada (vale para seções "tela cheia")
+    let mode = 'desktop', current = null, timer = null, seq = 0, controller = null;
+
+    function setStatus(text, cls) { if (statusEl) { statusEl.textContent = text; statusEl.className = cls || ''; } }
+    function scale() {
+        const cs = getComputedStyle(viewport);
+        const avail = viewport.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+        return Math.max(0.1, Math.min(1, avail / WIDTH[mode]));
+    }
+    function fit(f) {
+        const s = scale();
+        f.style.width = WIDTH[mode] + 'px';
+        f.style.height = Math.max(SCREEN_H[mode], f._bottom || 0) + 'px';
+        f.style.transform = 'scale(' + s + ')';
+    }
+    function layout() {
+        stage.querySelectorAll('iframe').forEach(fit);
+        if (!current) return;
+        const s = scale();
+        stage.style.width = Math.round(WIDTH[mode] * s) + 'px';
+        stage.style.height = Math.round(Math.max(60, current._bottom || SCREEN_H[mode]) * s) + 'px';
+    }
+
+    function show(html, my) {
+        const f = document.createElement('iframe');
+        f.className = 'pv-frame';
+        f.setAttribute('sandbox', 'allow-scripts');   // origem isolada: o conteúdo do preview não alcança o painel
+        f.setAttribute('title', 'Pré-visualização da seção');
+        f.setAttribute('scrolling', 'no');
+        f.tabIndex = -1;
+        f.style.opacity = '0';
+        f.style.pointerEvents = 'none';
+        f._bottom = SCREEN_H[mode];
+        let done = false, t = null;
+        const finish = () => {
+            if (done) return;
+            done = true; clearTimeout(t);
+            if (my !== seq) { f.remove(); return; }
+            Array.from(stage.querySelectorAll('iframe')).forEach(x => { if (x !== f) x.remove(); });
+            f.style.opacity = '1'; f.style.pointerEvents = 'auto';
+            current = f; layout();
+            setStatus('Preview atualizado', 'is-ok');
+        };
+        f.addEventListener('load', () => requestAnimationFrame(finish));
+        t = setTimeout(finish, 4000);
+        f.srcdoc = html;
+        fit(f);
+        stage.appendChild(f);
+    }
+
+    async function render() {
+        const my = ++seq;
+        if (controller) controller.abort();
+        controller = new AbortController();
+        setStatus('Atualizando…', 'is-busy');
+        const fd = new FormData(form);
+        fd.delete('action'); fd.delete('publish_at');
+        fd.set('section_id', String(SECTION_ID));
+        try {
+            const res = await fetch(URL_PREVIEW, { method: 'POST', body: fd, credentials: 'same-origin', signal: controller.signal });
+            if (my !== seq) return;
+            if (res.status === 401 || res.status === 403) { setStatus('Sessão expirada: atualize a página para ver o preview.', 'is-error'); return; }
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const html = await res.text();
+            if (my !== seq) return;
+            show(html, my);
+        } catch (err) {
+            if (err && err.name === 'AbortError') return;
+            console.error('Preview:', err);
+            setStatus('Não foi possível atualizar o preview. Altere qualquer campo para tentar de novo.', 'is-error');
+        }
+    }
+
+    function queue() {
+        clearTimeout(timer);
+        setStatus('Atualizando…', 'is-busy');
+        timer = setTimeout(render, 350);
+    }
+    window.sxPreviewQueue = queue;
+
+    // O iframe informa a altura real da seção.
+    window.addEventListener('message', (ev) => {
+        const d = ev.data;
+        if (!d || d.sxpv !== 1 || typeof d.bottom !== 'number') return;
+        const f = Array.from(stage.querySelectorAll('iframe')).find(x => x.contentWindow === ev.source);
+        if (!f) return;
+        f._bottom = Math.max(40, Math.min(d.bottom, 30000));
+        if (f === current) layout(); else fit(f);
+    });
+
+    // Qualquer alteração no formulário (texto, cores, itens, mídia) atualiza o preview.
+    const onChange = (e) => { if (e.target && (e.target.name === 'publish_at' || e.target.name === 'csrf_token')) return; queue(); };
+    form.addEventListener('input', onChange);
+    form.addEventListener('change', onChange);
+
+    document.querySelectorAll('.pv-dev').forEach(btn => btn.addEventListener('click', () => {
+        mode = btn.dataset.mode;
+        document.querySelectorAll('.pv-dev').forEach(b => { const on = b === btn; b.classList.toggle('is-active', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+        layout();
+    }));
+
+    const expand = document.getElementById('pvExpand');
+    function setFull(on) {
+        column.classList.toggle('pv-full', on);
+        if (expand) { expand.setAttribute('aria-pressed', on ? 'true' : 'false'); expand.textContent = on ? '✕ Fechar' : '⤢ Ampliar'; }
+        requestAnimationFrame(layout);
+    }
+    if (expand) expand.addEventListener('click', () => setFull(!column.classList.contains('pv-full')));
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && column.classList.contains('pv-full')) setFull(false); });
+
+    if (window.ResizeObserver) new ResizeObserver(layout).observe(viewport); else window.addEventListener('resize', layout);
+    render();
+})();
+</script>
+
 
 <?php require_once __DIR__ . '/../includes/admin_footer.php'; ?>

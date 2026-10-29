@@ -66,7 +66,31 @@ function sectionStyleChoices(): array {
     ];
 }
 
-const SX_COLOR_FIELDS = ['bg_color', 'bg_color2', 'title_color', 'subtitle_color', 'description_color', 'body_color', 'accent_color', 'objectives_bg', 'objectives_text', 'map_box_bg', 'map_box_border', 'map_marker_color', 'map_marker_border', 'map_info_bg', 'map_info_text', 'map_info_border', 'map_info_icon_bg', 'map_info_code_color', 'card_bg', 'card_text', 'card_border_color'];
+const SX_COLOR_FIELDS = ['bg_color', 'bg_color2', 'title_color', 'subtitle_color', 'description_color', 'body_color', 'accent_color', 'objectives_bg', 'objectives_text', 'map_box_bg', 'map_box_border', 'map_marker_color', 'map_marker_border', 'map_info_bg', 'map_info_text', 'map_info_border', 'map_info_icon_bg', 'map_info_code_color', 'card_bg', 'card_text', 'card_border_color',
+    // Novas cores (marcador, destaque, listas, botões, cards, cronograma e estatísticas)
+    'badge_color', 'badge_bg', 'highlight_color', 'list_marker_color',
+    'btn_primary_bg', 'btn_primary_text', 'btn_secondary_bg', 'btn_secondary_text', 'btn_secondary_border',
+    'card_title_color', 'card_desc_color', 'card_subtitle_color', 'card_icon_bg',
+    'timeline_color', 'stat_number_color'];
+
+/** Novas cores: campo => [classe CSS aplicada na <section>, variável CSS definida em style=""]. */
+const SX_EXTRA_COLORS = [
+    'badge_color'          => ['sx-bdc',  '--sx-badge-color'],
+    'badge_bg'             => ['sx-bdb',  '--sx-badge-bg'],
+    'highlight_color'      => ['sx-hlc',  '--sx-highlight'],
+    'list_marker_color'    => ['sx-lmc',  '--sx-list-marker'],
+    'btn_primary_bg'       => ['sx-bpb',  '--sx-btn1-bg'],
+    'btn_primary_text'     => ['sx-bpt',  '--sx-btn1-text'],
+    'btn_secondary_bg'     => ['sx-bsb',  '--sx-btn2-bg'],
+    'btn_secondary_text'   => ['sx-bst',  '--sx-btn2-text'],
+    'btn_secondary_border' => ['sx-bsbr', '--sx-btn2-border'],
+    'card_title_color'     => ['sx-ctt',  '--sx-card-title'],
+    'card_desc_color'      => ['sx-cdc',  '--sx-card-desc'],
+    'card_subtitle_color'  => ['sx-csc',  '--sx-card-sub'],
+    'card_icon_bg'         => ['sx-cib',  '--sx-card-icon-bg'],
+    'timeline_color'       => ['sx-tlc',  '--sx-timeline'],
+    'stat_number_color'    => ['sx-snc',  '--sx-stat-number'],
+];
 const SX_FONT_FIELDS  = ['title_font', 'body_font'];
 
 function sectionStyleDefaults(): array {
@@ -159,6 +183,9 @@ function sectionStyleClasses(array $s): string {
     foreach (['map_box_bg' => 'sx-mbb', 'map_box_border' => 'sx-mbbr', 'map_marker_color' => 'sx-mmc', 'map_marker_border' => 'sx-mmborder', 'map_info_bg' => 'sx-mib', 'map_info_text' => 'sx-mit', 'map_info_border' => 'sx-mibr', 'map_info_icon_bg' => 'sx-miib', 'map_info_code_color' => 'sx-micc'] as $field => $class) {
         if (isset($s[$field]) && $s[$field] !== '') $c[] = $class;
     }
+    foreach (SX_EXTRA_COLORS as $field => $def) {
+        if (isset($s[$field]) && $s[$field] !== '') $c[] = $def[0];
+    }
     if (isset($s['card_bg']) && $s['card_bg'] !== '')$c[] = 'sx-cb';
     if (isset($s['card_text']) && $s['card_text'] !== '')$c[] = 'sx-ct';
     if (isset($s['card_border_color']) && $s['card_border_color'] !== '')$c[] = 'sx-cborder';
@@ -210,6 +237,9 @@ function sectionStyleInline(array $s): string {$v = [];
     if (!empty($s['objectives_text'])) $v[] = '--sx-objectives-text:' .$s['objectives_text'];
     foreach (['map_box_bg' => '--sx-map-box-bg', 'map_box_border' => '--sx-map-box-border', 'map_marker_color' => '--sx-map-marker', 'map_marker_border' => '--sx-map-marker-border', 'map_info_bg' => '--sx-map-info-bg', 'map_info_text' => '--sx-map-info-text', 'map_info_border' => '--sx-map-info-border', 'map_info_icon_bg' => '--sx-map-info-icon-bg', 'map_info_code_color' => '--sx-map-info-code'] as $field => $var) {
         if (!empty($s[$field])) $v[] = $var . ':' . $s[$field];
+    }
+    foreach (SX_EXTRA_COLORS as $field => $def) {
+        if (!empty($s[$field])) $v[] = $def[1] . ':' . $s[$field];
     }
     if (!empty($s['card_bg']))      $v[] = '--sx-card-bg:' .$s['card_bg'];
     if (!empty($s['card_text']))    $v[] = '--sx-card-text:' .$s['card_text'];

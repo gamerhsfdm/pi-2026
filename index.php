@@ -99,6 +99,21 @@ if ($pdo && $sections) {
         catch (Throwable $e) { error_log('Erro ao migrar itens da seção ' . $identifier . ': ' . $e->getMessage()); $itemsBySection[$identifier] = []; }
     }
 }
+// Pré-visualização do painel (admin/section_preview.php): troca apenas a seção em edição pelos dados
+// ainda não publicados (rascunho do formulário), para o preview usar exatamente este mesmo HTML e CSS.
+// Sem a constante SX_SECTION_PREVIEW (ou seja, em toda visita real ao site) este bloco não faz nada.
+if (defined('SX_SECTION_PREVIEW') && isset($sxPreviewPayload) && is_array($sxPreviewPayload)) {
+    $pvId = (string)($sxPreviewPayload['identifier'] ?? '');
+    if ($pvId !== '') {
+        $sections[$pvId] = array_merge(
+            $sections[$pvId] ?? ['id' => 0, 'display_order' => 999],
+            (array)($sxPreviewPayload['row'] ?? []),
+            ['identifier' => $pvId, 'style_data' => json_encode((array)($sxPreviewPayload['style'] ?? []), JSON_UNESCAPED_UNICODE)]
+        );
+        $itemsBySection[$pvId] = (array)($sxPreviewPayload['items'] ?? []);
+        if (!isset($orderedSections) || !in_array($pvId, $orderedSections, true)) $orderedSections[] = $pvId;
+    }
+}
 // Só páginas geradas com dados reais do banco podem ir para o cache.
 $siteCacheable = ($pdo !== null && !empty($sections));
 
