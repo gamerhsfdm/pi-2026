@@ -489,7 +489,7 @@ require_once __DIR__ . '/../includes/admin_header.php';
         </div>
         <div>
             <label class="block text-xs font-semibold text-slate-700 mb-2">Descrição completa exibida no site</label>
-            <textarea name="description" rows="4" class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition" placeholder="Texto completo da seção..."><?= e($section['description'] ?? '') ?></textarea>
+            <textarea id="inputDescription" name="description" rows="4" class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:bg-white transition" placeholder="Texto completo da seção..."><?= e($section['description'] ?? '') ?></textarea>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1007,6 +1007,68 @@ require_once __DIR__ . '/../includes/admin_header.php';
                 </div>
 
                 <!-- Conteúdo Central Vivo da Seção Aberta -->
+                <?php if (($section['identifier'] ?? '') === 'mapa'): ?>
+                <div id="mapPreview" class="relative my-auto py-6" style="z-index:2;color:#111827">
+                    <div style="text-align:center;margin-bottom:22px">
+                        <span id="liveBadge" style="display:inline-block;font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#ff2d2d"><?= e($section['badge'] ?? 'EXPLORE A TUNÍSIA') ?></span>
+                        <h3 id="liveTitle" style="font-size:27px;line-height:1.15;font-weight:800;margin:10px 0;color:#111827"><?= e($section['title'] ?: 'Mapa Interativo') ?></h3>
+                        <p id="liveSubtitle" style="font-size:11px;margin:0 0 10px;color:#4b5563"><?= e($section['subtitle'] ?? '') ?></p>
+                        <p id="liveDescription" style="max-width:390px;margin:auto;font-size:12px;line-height:1.55;color:#64748b"><?= e($section['description'] ?? '') ?></p>
+                    </div>
+                    <div id="mapPreviewGrid" style="display:grid;grid-template-columns:minmax(0,2fr) minmax(150px,1fr);gap:18px;align-items:start">
+                        <div id="mapPreviewBox" style="position:relative;aspect-ratio:16/10;background:#f1f5f9;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;padding:16px">
+                            <img id="liveContentImage" src="<?= !empty($section['image_path']) ? e(SITE_URL . '/' . ltrim((string)$section['image_path'], '/')) : '' ?>" alt="Mapa" style="width:100%;height:100%;object-fit:contain">
+                            <?php foreach ($sectionItems as $item): if (($item['item_type'] ?? '') !== 'map_marker') continue; $coords = explode(',', (string)($item['link_url'] ?? '40%,50%')); ?>
+                                <i class="map-preview-marker" style="position:absolute;top:<?= e(trim($coords[0] ?? '40%')) ?>;left:<?= e(trim($coords[1] ?? '50%')) ?>;width:12px;height:12px;border:2px solid #fff;border-radius:50%;background:#ff2d2d;transform:translate(-50%,-50%);box-shadow:0 0 0 4px rgba(255,45,45,.2)"></i>
+                            <?php endforeach; ?>
+                        </div>
+                        <div id="mapPreviewInfo" style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:15px;box-shadow:0 8px 18px rgba(15,23,42,.08)">
+                            <div style="display:flex;gap:8px;align-items:center;margin-bottom:11px"><b id="mapPreviewIcon" style="display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:#ff2d2d;color:#fff">🌍</b><div><strong style="font-size:12px">Informações Gerais</strong><br><span style="font-size:10px;color:#64748b">República da Tunísia</span></div></div>
+                            <div class="map-preview-row"><span>👥 População</span><b>12,3 mi</b></div><div class="map-preview-row"><span>🗣️ Idioma</span><b>Árabe</b></div><div class="map-preview-row"><span>💲 Moeda</span><b>Dinar</b></div><div class="map-preview-row"><span>🌍 Continente</span><b>África</b></div><div id="mapPreviewCode" style="text-align:center;margin-top:12px;font-size:25px;font-weight:800;color:#e2e8f0">TN</div>
+                        </div>
+                    </div>
+                </div>
+                <style>#mapPreviewInfo .map-preview-row{display:flex;justify-content:space-between;gap:6px;padding:8px 0;border-bottom:1px solid #e5e7eb;font-size:9px}#mapPreviewInfo .map-preview-row span{color:#64748b}#mapPreviewInfo .map-preview-row b{font-size:9px}</style>
+                <?php elseif (($section['identifier'] ?? '') === 'cultura'): ?>
+                <div id="culturalPreview" class="relative my-auto py-6" style="z-index:2;color:#111827;width:100%">
+                    <div style="text-align:center;margin-bottom:24px">
+                        <span id="liveBadge" style="display:inline-block;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#ff2d2d"><?= e($section['badge'] ?? 'SEMANA CULTURAL') ?></span>
+                        <h2 id="liveTitle" style="font-size:28px;font-weight:800;margin:10px 0;color:#111827;line-height:1.2"><?= e($section['title'] ?: 'Celebrando a Tunísia') ?></h2>
+                        <p id="liveSubtitle" style="font-size:13px;margin:6px auto 0;color:#4b5563;max-width:500px"><?= e($section['subtitle'] ?? '') ?></p>
+                        <p id="liveDescription" style="font-size:12px;margin:8px auto 0;color:#64748b;max-width:560px;line-height:1.6"><?= e($section['description'] ?? '') ?></p>
+                    </div>
+
+                    <div id="culturalPreviewGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;width:100%">
+                        <?php 
+                        $culturalCards = array_filter($sectionItems, fn($i) => ($i['item_type'] ?? '') === 'cultural_card');
+                        if (empty($culturalCards)) {
+                            // Se ainda não houver itens carregados, busca os padrões de cultura
+                            $culturalCards = [
+                                ['title' => 'Gastronomia', 'description' => 'Cuscuz, tajine, brik e doces tradicionais', 'subtitle' => 'Degustação de pratos típicos tunisianos', 'icon' => '🍴', 'image_path' => 'assets/img/img01.png'],
+                                ['title' => 'Música', 'description' => 'Apresentação de músicas e danças tradicionais', 'subtitle' => 'Ritmos mediterrâneos e instrumentos árabes', 'icon' => '🎵', 'image_path' => 'assets/img/img02.png'],
+                                ['title' => 'História', 'description' => 'Exposição sobre a rica história tunisiana', 'subtitle' => 'De Cartago aos dias atuais', 'icon' => '📖', 'image_path' => 'assets/img/img03.png']
+                            ];
+                        }
+                        foreach ($culturalCards as $cIdx => $cItem): 
+                            $cImg = !empty($cItem['image_path']) ? SITE_URL . '/' . ltrim((string)$cItem['image_path'], '/') : '';
+                        ?>
+                        <div class="cultural-preview-card" data-cultural-index="<?= $cIdx ?>" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;box-shadow:0 4px 14px rgba(15,23,42,.06);display:flex;flex-direction:column;transition:transform .3s ease">
+                            <div style="position:relative;height:120px;background:#f1f5f9;overflow:visible">
+                                <img class="cultural-preview-img" src="<?= e($cImg) ?>" alt="<?= e($cItem['title'] ?? '') ?>" style="width:100%;height:100%;object-fit:cover;display:<?= $cImg ? 'block' : 'none' ?>">
+                                <div class="cultural-preview-icon" style="position:absolute;bottom:-14px;left:14px;width:34px;height:34px;background:#ffffff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 4px 12px rgba(0,0,0,.12);border:1px solid rgba(0,0,0,.04);z-index:2">
+                                    <?= e($cItem['icon'] ?? '✨') ?>
+                                </div>
+                            </div>
+                            <div style="padding:22px 14px 16px;display:flex;flex-direction:column;flex:1">
+                                <h3 class="cultural-preview-title" style="font-size:15px;font-weight:700;margin:0 0 6px;color:#111827"><?= e($cItem['title'] ?? '') ?></h3>
+                                <p class="cultural-preview-desc" style="font-size:11px;color:#4b5563;margin:0 0 10px;line-height:1.5;flex:1"><?= e($cItem['description'] ?? '') ?></p>
+                                <span class="cultural-preview-sub" style="font-size:10px;color:#111827;font-weight:600"><?= e($cItem['subtitle'] ?? '') ?></span>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php else: ?>
                 <div id="liveContentLayout" class="relative my-auto py-8 flex flex-col gap-5" style="z-index: 2;">
                     <img id="liveContentImage" src="<?= !empty($section['image_path']) ? e(SITE_URL . '/' . ltrim((string)$section['image_path'], '/')) : '' ?>" alt="" class="hidden w-full max-h-52 object-cover rounded-xl">
                     <div id="liveContentCopy">
@@ -1027,6 +1089,7 @@ require_once __DIR__ . '/../includes/admin_header.php';
                     </div>
                     </div>
                 </div>
+                <?php endif; ?>
 
                 <!-- Rodapé Mockup -->
                 <div class="relative text-[10px] text-white/50 border-t border-white/10 pt-3 flex justify-between items-center" style="z-index: 2;">
@@ -1274,6 +1337,52 @@ require_once __DIR__ . '/../includes/admin_header.php';
             if (tf) ensureFont(tf);
             if (bf) ensureFont(bf);
             const accent = val('accent_color');
+            if (accent) {
+                const liveBadgeEl = document.getElementById('liveBadge');
+                if (liveBadgeEl) liveBadgeEl.style.color = accent;
+            }
+
+            const culturalPreview = document.getElementById('culturalPreview');
+            if (culturalPreview) {
+                const cCards = culturalPreview.querySelectorAll('.cultural-preview-card');
+                const cardBg = val('card_bg') || '#ffffff';
+                const cardText = val('card_text') || '#111827';
+                const cardBorder = val('card_border_color') || '#e5e7eb';
+                const cardStyle = val('card_style');
+                const cardRadius = val('card_radius');
+                const cardShadow = val('card_shadow');
+                const cardHover = val('card_hover');
+                const cardBorderWidth = val('card_border_width');
+
+                const radMap = { sq: '4px', md: '16px', lg: '24px', xl: '32px' };
+                const borderWMap = { none: '0px', thin: '1px', medium: '2px', thick: '4px' };
+                const shadowMap = {
+                    none: 'none',
+                    soft: '0 4px 14px rgba(15,23,42,.06)',
+                    medium: '0 10px 24px rgba(15,23,42,.12)',
+                    strong: '0 20px 38px rgba(15,23,42,.22)'
+                };
+
+                cCards.forEach(cCard => {
+                    cCard.style.background = cardStyle === 'glass' ? 'rgba(255,255,255,0.7)' : cardBg;
+                    if (cardRadius && radMap[cardRadius]) cCard.style.borderRadius = radMap[cardRadius];
+                    if (cardBorderWidth && borderWMap[cardBorderWidth]) cCard.style.borderWidth = borderWMap[cardBorderWidth];
+                    cCard.style.borderColor = cardStyle === 'accent' ? (accent || '#ff2d2d') : (cardStyle === 'flat' ? 'transparent' : cardBorder);
+                    cCard.style.boxShadow = cardStyle === 'flat' ? 'none' : (shadowMap[cardShadow] || shadowMap.soft);
+
+                    const titleEl = cCard.querySelector('.cultural-preview-title');
+                    const descEl = cCard.querySelector('.cultural-preview-desc');
+                    const subEl = cCard.querySelector('.cultural-preview-sub');
+                    const iconEl = cCard.querySelector('.cultural-preview-icon');
+
+                    if (titleEl) titleEl.style.color = cardText;
+                    if (descEl) descEl.style.color = val('body_color') || '#4b5563';
+                    if (subEl) subEl.style.color = accent || '#ff2d2d';
+                    if (iconEl && accent && cardStyle === 'accent') {
+                        iconEl.style.borderColor = accent;
+                    }
+                });
+            }
 
             if (liveTitle) {
                 const size = TITLE_PX[val('title_size')];
@@ -1363,6 +1472,7 @@ require_once __DIR__ . '/../includes/admin_header.php';
             console.error("Erro em refresh:", err);
         }
     }
+    window.triggerSxUpdate = refresh;
 
     panel.addEventListener('input', refresh);
     panel.addEventListener('change', refresh);
@@ -1430,12 +1540,14 @@ require_once __DIR__ . '/../includes/admin_header.php';
 <script>
     const inputTitle = document.getElementById('inputTitle');
     const inputSubtitle = document.getElementById('inputSubtitle');
+    const inputDescription = document.getElementById('inputDescription');
     const inputBadge = document.getElementById('inputBadge');
     const inputBtn1 = document.getElementById('inputBtn1Text');
     const inputBtn2 = document.getElementById('inputBtn2Text');
 
     const liveTitle = document.getElementById('liveTitle');
     const liveSubtitle = document.getElementById('liveSubtitle');
+    const liveDescription = document.getElementById('liveDescription');
     const liveBadge = document.getElementById('liveBadge');
     const liveBtn1 = document.getElementById('liveBtn1');
     const liveBtn2 = document.getElementById('liveBtn2');
@@ -1625,8 +1737,9 @@ require_once __DIR__ . '/../includes/admin_header.php';
                 complete.classList.toggle('ready', ready);
             }
 
-            select.addEventListener('change', applyType);
-            Object.keys(inputs).forEach(k => { if (k !== 'type') inputs[k].addEventListener('input', () => { refreshSummary(); updateStatus(); }); });
+            select.addEventListener('change', () => { applyType(); syncCulturalPreview(); });
+            titleInput.addEventListener('input', () => { refreshSummary(); updateStatus(); syncCulturalPreview(); });
+            Object.keys(inputs).forEach(k => { if (k !== 'type') inputs[k].addEventListener('input', () => { refreshSummary(); updateStatus(); syncCulturalPreview(); }); });
 
             function setOpen(open) {
                 row.classList.toggle('is-open', open);
@@ -1714,6 +1827,56 @@ require_once __DIR__ . '/../includes/admin_header.php';
             pill('Tipos:', String(types), '');
         }
 
+        function syncCulturalPreview() {
+            const culturalGrid = document.getElementById('culturalPreviewGrid');
+            if (!culturalGrid) return;
+            const cRows = rows().filter(r => r.dataset.type === 'cultural_card');
+            culturalGrid.replaceChildren();
+            cRows.forEach((r, idx) => {
+                const getVal = name => {
+                    const el = r.querySelector('[name="' + name + '"]');
+                    return el ? el.value.trim() : '';
+                };
+                const title = getVal('item_title[]') || 'Item ' + (idx + 1);
+                const desc = getVal('item_description[]');
+                const sub = getVal('item_subtitle[]');
+                const icon = getVal('item_icon[]') || '✨';
+                const img = getVal('item_image_path[]');
+                const fullImg = img ? (/^(https?:)?\/\//.test(img) ? img : BASE + '/' + img.replace(/^\/+/, '')) : '';
+
+                const cardEl = el('div', {
+                    class: 'cultural-preview-card',
+                    'data-cultural-index': String(idx),
+                    style: 'background:#ffffff;border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;box-shadow:0 4px 14px rgba(15,23,42,.06);display:flex;flex-direction:column;transition:transform .3s ease'
+                });
+
+                const mediaBox = el('div', { style: 'position:relative;height:120px;background:#f1f5f9;overflow:visible' });
+                const imgEl = el('img', {
+                    class: 'cultural-preview-img',
+                    src: fullImg,
+                    alt: title,
+                    style: 'width:100%;height:100%;object-fit:cover;' + (fullImg ? 'display:block;' : 'display:none;')
+                });
+                const iconEl = el('div', {
+                    class: 'cultural-preview-icon',
+                    style: 'position:absolute;bottom:-14px;left:14px;width:34px;height:34px;background:#ffffff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 4px 12px rgba(0,0,0,.12);border:1px solid rgba(0,0,0,.04);z-index:2'
+                }, icon);
+
+                mediaBox.append(imgEl, iconEl);
+
+                const bodyBox = el('div', { style: 'padding:22px 14px 16px;display:flex;flex-direction:column;flex:1' });
+                const h3 = el('h3', { class: 'cultural-preview-title', style: 'font-size:15px;font-weight:700;margin:0 0 6px;color:#111827' }, title);
+                const p = el('p', { class: 'cultural-preview-desc', style: 'font-size:11px;color:#4b5563;margin:0 0 10px;line-height:1.5;flex:1' }, desc);
+                const span = el('span', { class: 'cultural-preview-sub', style: 'font-size:10px;color:#111827;font-weight:600' }, sub);
+
+                bodyBox.append(h3, p, span);
+                cardEl.append(mediaBox, bodyBox);
+                culturalGrid.appendChild(cardEl);
+            });
+            // Re-aplica estilos visuais caso a seção de aparência tenha sido configurada
+            if (typeof window.triggerSxUpdate === 'function') window.triggerSxUpdate();
+        }
+
         function refresh() {
             rows().forEach(r => { r.hidden = !(activeFilter === 'all' || r.dataset.type === activeFilter); });
             renderFilters();
@@ -1727,6 +1890,7 @@ require_once __DIR__ . '/../includes/admin_header.php';
             if (emptyEl) emptyEl.hidden = rows().length > 0;
             updateStatus();
             updateToggleAll();
+            syncCulturalPreview();
         }
 
         if (list) {
@@ -1773,6 +1937,12 @@ require_once __DIR__ . '/../includes/admin_header.php';
     if (inputSubtitle && liveSubtitle) {
         inputSubtitle.addEventListener('input', () => {
             liveSubtitle.textContent = inputSubtitle.value.trim() || 'Subtítulo / Descrição da seção...';
+        });
+    }
+
+    if (inputDescription && liveDescription) {
+        inputDescription.addEventListener('input', () => {
+            liveDescription.textContent = inputDescription.value.trim() || 'Descrição da seção...';
         });
     }
 
