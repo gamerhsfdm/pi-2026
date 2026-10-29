@@ -611,8 +611,24 @@ require_once __DIR__ . '/../includes/admin_header.php';
             };
             $sxColor = function (string $name, string $label, string $hint = '') use ($styleValues) {
                 $v = $styleValues[$name];
+                // Cor exibida enquanto o campo está em "padrão": corresponde ao CSS do site,
+                // mas não é enviada no formulário até que o administrador escolha uma cor.
+                $siteColorDefaults = [
+                    'bg_color' => '#fafafa', 'bg_color2' => '#ffffff',
+                    'title_color' => '#111827', 'subtitle_color' => '#4b5563',
+                    'description_color' => '#64748b', 'body_color' => '#64748b',
+                    'accent_color' => '#ff2d2d', 'objectives_bg' => '#ff2d2d',
+                    'objectives_text' => '#ffffff', 'card_bg' => '#ffffff',
+                    'map_box_bg' => '#f1f5f9', 'map_box_border' => '#e5e7eb',
+                    'map_marker_color' => '#ff2d2d', 'map_marker_border' => '#ffffff',
+                    'map_info_bg' => '#ffffff', 'map_info_text' => '#111827',
+                    'map_info_border' => '#e5e7eb', 'map_info_icon_bg' => '#ff2d2d',
+                    'map_info_code_color' => '#e2e8f0',
+                    'card_text' => '#111827', 'card_border_color' => '#e5e7eb'
+                ];
+                $displayColor = $v !== '' ? $v : ($siteColorDefaults[$name] ?? '#888888');
                 echo '<div class="sxp-field sxp-color" data-field="' . e($name) . '"><span class="sxp-label">' . e($label) . '</span><div class="sxp-color-row">'
-                   . '<input type="color" class="sxp-picker" value="' . e($v !== '' ? $v : '#888888') . '" aria-label="' . e($label) . '">'
+                   . '<input type="color" class="sxp-picker" value="' . e($displayColor) . '" aria-label="' . e($label) . '">'
                    . '<input type="text" class="sxp-hex" name="sx[' . e($name) . ']" value="' . e($v) . '" placeholder="padrão" maxlength="7" spellcheck="false" autocomplete="off">'
                    . '<button type="button" class="sxp-clear" title="Voltar ao padrão do site" aria-label="Limpar ' . e($label) . '">×</button></div>'
                    . '<div class="sxp-swatches"></div>'
@@ -855,8 +871,25 @@ require_once __DIR__ . '/../includes/admin_header.php';
                     <div class="sxp-grid">
                         <?php
                             $sxColor('title_color', 'Cor do título');
-                            $sxColor('body_color', 'Cor do texto');
+                            $sxColor('subtitle_color', 'Cor do subtítulo', 'Usada somente quando a seção tiver um subtítulo.');
+                            $sxColor('description_color', 'Cor da descrição', 'Texto descritivo abaixo do título.');
+                            $sxColor('body_color', 'Cor do texto geral', 'Parágrafos e listas fora dos cards.');
                             $sxColor('accent_color', 'Cor de destaque', 'Selo, palavra destacada, detalhe sob o título e botão principal.');
+                            if (($section['identifier'] ?? '') === 'sobre') {
+                                $sxColor('objectives_bg', 'Fundo de Objetivos e Competências', 'Altera o quadro vermelho desta seção.');
+                                $sxColor('objectives_text', 'Texto de Objetivos e Competências', 'Altera títulos, itens e marcações deste quadro.');
+                            }
+                            if (($section['identifier'] ?? '') === 'mapa') {
+                                $sxColor('map_box_bg', 'Fundo da moldura do mapa');
+                                $sxColor('map_box_border', 'Borda da moldura do mapa');
+                                $sxColor('map_marker_color', 'Cor dos marcadores');
+                                $sxColor('map_marker_border', 'Borda dos marcadores');
+                                $sxColor('map_info_bg', 'Fundo do cartão de informações');
+                                $sxColor('map_info_text', 'Texto do cartão de informações');
+                                $sxColor('map_info_border', 'Bordas do cartão de informações');
+                                $sxColor('map_info_icon_bg', 'Fundo do ícone de informações');
+                                $sxColor('map_info_code_color', 'Cor do código do país (TN)');
+                            }
                         ?>
                     </div>
                 </div>
@@ -1023,7 +1056,8 @@ require_once __DIR__ . '/../includes/admin_header.php';
     const T_LEAD = { tight: '1.05', normal: '1.25', relaxed: '1.5' };
     const B_LEAD = { tight: '1.4', normal: '1.7', relaxed: '2.05' };
     const BTN_R = { sq: '4px', md: '10px', pill: '999px' };
-    const PALETTE = ['#0f172a', '#ffffff', '#ef4444', '#f59e0b', '#10b981', '#0ea5e9', '#6366f1', '#ec4899'];
+    // Paleta do site principal (assets/css/style.css), disponível em todos os campos de cor.
+    const PALETTE = ['#ff2d2d', '#e02424', '#111827', '#64748b', '#4b5563', '#ffffff', '#e5e7eb', '#fafafa', '#f3f4f6', '#f1f5f9', '#e2e8f0', '#94a3b8', '#cbd5e1'];
 
     const PRESETS = {
         clean:     { text_align: 'center', bg_mode: 'solid', bg_color: '#ffffff', title_color: '#0f172a', body_color: '#475569', accent_color: '#4f46e5', title_weight: '800', title_decor: 'line' },
@@ -1148,13 +1182,13 @@ require_once __DIR__ . '/../includes/admin_header.php';
     function updateContrast() {
         try {
             const mode = val('bg_mode'), bg1 = val('bg_color'), bg2 = val('bg_color2') || bg1;
-            const title = val('title_color'), body = val('body_color');
+            const title = val('title_color'), subtitle = val('subtitle_color'), description = val('description_color'), body = val('body_color');
             if (contrastBox) contrastBox.className = 'hint';
             if (val('bg_image')) {
                 if (contrastBox) contrastBox.textContent = 'Com mídia de fundo, confira a leitura no preview.';
                 return;
             }
-            if (!title && !body) { if (contrastBox) contrastBox.textContent = ''; return; }
+            if (!title && !subtitle && !description && !body) { if (contrastBox) contrastBox.textContent = ''; return; }
             if (!mode || !bg1) {
                 if (contrastBox) contrastBox.textContent = 'Dica: ao mudar a cor do texto, defina também a cor do fundo.';
                 return;
@@ -1231,7 +1265,8 @@ require_once __DIR__ . '/../includes/admin_header.php';
             if (mode === 'solid' && c1) layers.push(c1);
             else if (mode === 'gradient' && c1) layers.push('linear-gradient(' + (DIRS[val('bg_direction')] || 'to bottom') + ',' + c1 + ',' + c2 + ')');
             
-            card.style.background = layers.join(',');
+            // Sem personalização, o preview reproduz o fundo claro do site principal.
+            card.style.background = layers.join(',') || '#ffffff';
             card.style.backgroundSize = img && !isVideoFile ? 'cover' : '';
             card.style.backgroundPosition = img && !isVideoFile ? 'center' : '';
 
@@ -1262,7 +1297,7 @@ require_once __DIR__ . '/../includes/admin_header.php';
                     liveTitle.style.webkitBackgroundClip = '';
                     liveTitle.style.backgroundClip = '';
                     liveTitle.style.webkitTextFillColor = '';
-                    liveTitle.style.color = val('title_color');
+                    liveTitle.style.color = val('title_color') || '#111827';
                 }
             }
             if (liveDecor) {
@@ -1283,17 +1318,17 @@ require_once __DIR__ . '/../includes/admin_header.php';
                 liveSub.style.fontFamily = (bf && bf !== 'sans' && FONTS[bf]) ? FONTS[bf].stack : '';
                 liveSub.style.fontSize = BODY_PX[val('body_size')] ? BODY_PX[val('body_size')] + 'px' : '';
                 liveSub.style.lineHeight = B_LEAD[val('body_leading')] || '';
-                liveSub.style.color = val('body_color');
+                liveSub.style.color = val('subtitle_color') || val('description_color') || val('body_color') || '#64748b';
                 const al = val('text_align');
                 liveSub.style.marginLeft = (al === 'center' || al === 'right') ? 'auto' : '';
                 liveSub.style.marginRight = (al === 'center') ? 'auto' : '';
             }
             if (liveBadge) {
-                liveBadge.style.color = accent;
+                liveBadge.style.color = accent || '#ff2d2d';
                 liveBadge.style.display = val('hide_badge') === '1' ? 'none' : '';
             }
             [liveBtn1, liveBtn2].forEach(b => { if (b) b.style.borderRadius = BTN_R[val('btn_radius')] || ''; });
-            if (liveBtn1) liveBtn1.style.background = accent;
+            if (liveBtn1) liveBtn1.style.background = accent || '#ff2d2d';
             if (liveTitle) liveTitle.style.display = val('hide_title') === '1' ? 'none' : '';
             if (liveSub) liveSub.style.display = val('hide_description') === '1' ? 'none' : '';
             if (liveBtn1) liveBtn1.parentElement.style.display = val('hide_buttons') === '1' ? 'none' : '';

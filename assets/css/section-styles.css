@@ -41,12 +41,30 @@
    para isso existem as cores de card (.sx-cb / .sx-ct). */
 .sx-tc :is(h1, h2, h3, h4):not(:is(.card, .cultural-card, .business-card, .knowledge-card, .model-card, .timeline-card, .info-card, .stat-box, .objetivos-box) *) { color: var(--sx-title-color) !important; }
 .sx-bc :is(p, li):not(:is(.card, .cultural-card, .business-card, .knowledge-card, .model-card, .timeline-card, .info-card, .stat-box, .objetivos-box) *) { color: var(--sx-body-color) !important; }
+.sx-stc .sx-subtitle { color: var(--sx-subtitle-color) !important; }
+.sx-dc .sx-description,
+.sx-dc :is(.titulo-section, .section-header) > p,
+.sx-dc .hero-content > p { color: var(--sx-description-color) !important; }
 .sx-ac .titulo-section > span, .sx-ac .section-header > span, .sx-ac .tag, .sx-ac .sx-badge,
 .sx-ac .highlight, .sx-ac h1 > span, .sx-ac h2 > span { color: var(--sx-accent) !important; }
 /* o botão secundário (contorno branco) acompanha a cor do título, p/ não sumir em fundos claros */
 .sx-tc .btn-secondary { color: var(--sx-title-color) !important; border-color: var(--sx-title-color) !important; }
 .sx-ac .btn-primary { background: var(--sx-accent) !important; border-color: var(--sx-accent) !important; }
 .sx-ac .timeline-dot, .sx-ac .dot { background: var(--sx-accent) !important; }
+.sx-ob .objetivos-box { background: var(--sx-objectives-bg) !important; }
+.sx-ot .objetivos-box :is(h1, h2, h3, h4, p, li),
+.sx-ot .objetivos-box li::before { color: var(--sx-objectives-text) !important; }
+/* Elementos exclusivos do Mapa Interativo. */
+.sx-mbb .mapa-box { background: var(--sx-map-box-bg) !important; }
+.sx-mbbr .mapa-box { border-color: var(--sx-map-box-border) !important; }
+.sx-mmc .marker { background: var(--sx-map-marker) !important; box-shadow: 0 0 0 8px color-mix(in srgb, var(--sx-map-marker) 20%, transparent) !important; }
+.sx-mmc .marker:hover { background: #fff !important; border-color: var(--sx-map-marker) !important; }
+.sx-mmborder .marker { border-color: var(--sx-map-marker-border) !important; }
+.sx-mib .info-card { background: var(--sx-map-info-bg) !important; }
+.sx-mit .info-card :is(h1, h2, h3, h4, p, span, strong) { color: var(--sx-map-info-text) !important; }
+.sx-mibr .info-card, .sx-mibr .info-item { border-color: var(--sx-map-info-border) !important; }
+.sx-miib .info-card .icon-box { background: var(--sx-map-info-icon-bg) !important; }
+.sx-micc .info-card .country-code { color: var(--sx-map-info-code) !important; }
 .sx-cb :is(.card, .cultural-card, .business-card, .knowledge-card, .model-card, .timeline-card, .info-card, .stat-box, .objetivos-box) { background: var(--sx-card-bg) !important; }
 .sx-ct :is(.card, .cultural-card, .business-card, .knowledge-card, .model-card, .timeline-card, .info-card, .stat-box, .objetivos-box) :is(h1, h2, h3, h4, p, li, span:not(.icone)) { color: var(--sx-card-text) !important; }
 .sx-hide-badge .titulo-section > span, .sx-hide-badge .section-header > span, .sx-hide-badge .tag, .sx-hide-badge .sx-badge { display: none !important; }

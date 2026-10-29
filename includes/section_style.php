@@ -66,7 +66,7 @@ function sectionStyleChoices(): array {
     ];
 }
 
-const SX_COLOR_FIELDS = ['bg_color', 'bg_color2', 'title_color', 'body_color', 'accent_color', 'card_bg', 'card_text', 'card_border_color'];
+const SX_COLOR_FIELDS = ['bg_color', 'bg_color2', 'title_color', 'subtitle_color', 'description_color', 'body_color', 'accent_color', 'objectives_bg', 'objectives_text', 'map_box_bg', 'map_box_border', 'map_marker_color', 'map_marker_border', 'map_info_bg', 'map_info_text', 'map_info_border', 'map_info_icon_bg', 'map_info_code_color', 'card_bg', 'card_text', 'card_border_color'];
 const SX_FONT_FIELDS  = ['title_font', 'body_font'];
 
 function sectionStyleDefaults(): array {
@@ -150,8 +150,15 @@ function sectionStyleClasses(array $s): string {
     if (isset($s['bg_image']) && $s['bg_image'] !== '')$c[] = 'sx-bgimg';
     if (isset($s['bg_fixed']) && $s['bg_fixed'] === '1')$c[] = 'sx-bgfix';
     if (isset($s['title_color']) && $s['title_color'] !== '')$c[] = 'sx-tc';
+    if (isset($s['subtitle_color']) && $s['subtitle_color'] !== '')$c[] = 'sx-stc';
+    if (isset($s['description_color']) && $s['description_color'] !== '')$c[] = 'sx-dc';
     if (isset($s['body_color']) && $s['body_color'] !== '')$c[] = 'sx-bc';
     if (isset($s['accent_color']) && $s['accent_color'] !== '')$c[] = 'sx-ac';
+    if (isset($s['objectives_bg']) && $s['objectives_bg'] !== '')$c[] = 'sx-ob';
+    if (isset($s['objectives_text']) && $s['objectives_text'] !== '')$c[] = 'sx-ot';
+    foreach (['map_box_bg' => 'sx-mbb', 'map_box_border' => 'sx-mbbr', 'map_marker_color' => 'sx-mmc', 'map_marker_border' => 'sx-mmborder', 'map_info_bg' => 'sx-mib', 'map_info_text' => 'sx-mit', 'map_info_border' => 'sx-mibr', 'map_info_icon_bg' => 'sx-miib', 'map_info_code_color' => 'sx-micc'] as $field => $class) {
+        if (isset($s[$field]) && $s[$field] !== '') $c[] = $class;
+    }
     if (isset($s['card_bg']) && $s['card_bg'] !== '')$c[] = 'sx-cb';
     if (isset($s['card_text']) && $s['card_text'] !== '')$c[] = 'sx-ct';
     if (isset($s['card_border_color']) && $s['card_border_color'] !== '')$c[] = 'sx-cborder';
@@ -195,8 +202,15 @@ function sectionStyleInline(array $s): string {$v = [];
     $bg = sectionStyleBgValue($s);
     if ($bg !== '') $v[] = '--sx-bg:' .$bg;
     if (!empty($s['title_color']))  $v[] = '--sx-title-color:' .$s['title_color'];
+    if (!empty($s['subtitle_color'])) $v[] = '--sx-subtitle-color:' .$s['subtitle_color'];
+    if (!empty($s['description_color'])) $v[] = '--sx-description-color:' .$s['description_color'];
     if (!empty($s['body_color']))   $v[] = '--sx-body-color:' .$s['body_color'];
     if (!empty($s['accent_color'])) $v[] = '--sx-accent:' .$s['accent_color'];
+    if (!empty($s['objectives_bg'])) $v[] = '--sx-objectives-bg:' .$s['objectives_bg'];
+    if (!empty($s['objectives_text'])) $v[] = '--sx-objectives-text:' .$s['objectives_text'];
+    foreach (['map_box_bg' => '--sx-map-box-bg', 'map_box_border' => '--sx-map-box-border', 'map_marker_color' => '--sx-map-marker', 'map_marker_border' => '--sx-map-marker-border', 'map_info_bg' => '--sx-map-info-bg', 'map_info_text' => '--sx-map-info-text', 'map_info_border' => '--sx-map-info-border', 'map_info_icon_bg' => '--sx-map-info-icon-bg', 'map_info_code_color' => '--sx-map-info-code'] as $field => $var) {
+        if (!empty($s[$field])) $v[] = $var . ':' . $s[$field];
+    }
     if (!empty($s['card_bg']))      $v[] = '--sx-card-bg:' .$s['card_bg'];
     if (!empty($s['card_text']))    $v[] = '--sx-card-text:' .$s['card_text'];
     if (!empty($s['card_border_color'])) $v[] = '--sx-card-border:' .$s['card_border_color'];
